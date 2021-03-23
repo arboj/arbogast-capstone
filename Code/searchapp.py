@@ -10,6 +10,12 @@ Created on Mon Mar  1 18:34:55 2021
 
 from capstone_twitter_search import twittsearch
 import os
+import pandas
+
+code_dir = os.getcwd()
+print("Current working directory: {0}".format(code_dir))
+parent_dir = os.path.dirname(code_dir)
+data_dir = os.path.join(parent_dir,"Data")
 
 searchterms = ['snow','weather','power','freeze', 'ice', 'blackout','water']
 text_query = "snow OR weather OR power OR freeze OR ice OR blackout OR water'"
@@ -30,3 +36,4 @@ until_date = '2021-02-20'
 # =============================================================================
 
 tweetdf = twittsearch(text_query,since_date,until_date)
+tweetdf.to_csv(os.path.join(data_dir,"tweets.csv"))
