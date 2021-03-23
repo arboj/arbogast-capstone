@@ -1,0 +1,32 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Mar  1 18:34:55 2021
+
+@author: Arbo
+
+"""
+
+
+from capstone_twitter_search import twittsearch
+import os
+
+searchterms = ['snow','weather','power','freeze', 'ice', 'blackout','water']
+text_query = "snow OR weather OR power OR freeze OR ice OR blackout OR water'"
+
+
+since_date = '2021-02-12'
+until_date = '2021-02-20'
+
+# =============================================================================
+# d = {i: twittsearch(i,since_date,until_date) for i in searchtearms}
+# =============================================================================
+
+
+# =============================================================================
+# for text_query in searchterms:
+#     #Dynamically create Data frames
+#     vars()[text_query] = twittsearch(text_query,since_date,until_date)
+# =============================================================================
+
+tweetdf = twittsearch(text_query,since_date,until_date)
