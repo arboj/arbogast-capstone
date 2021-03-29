@@ -76,6 +76,6 @@ def twittsearch(text_query,since_date,until_date):
     tweet_no_geo = pd.DataFrame(tweets_list2, columns=
                               ['Datetime', 'Tweet Id', 'Text'])
 
-    return (tweets_geo_df,tweet_no_geo)
+    return [tweets_geo_df,tweet_no_geo]
 
 

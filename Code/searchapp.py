@@ -24,19 +24,13 @@ text_query = "snow OR weather OR power OR freeze OR ice OR blackout OR water'"
 since_date = '2021-02-12'
 until_date = '2021-02-20'
 
-# =============================================================================
-# d = {i: twittsearch(i,since_date,until_date) for i in searchtearms}
-# =============================================================================
+listdfs = twittsearch(text_query,since_date,until_date)
 
-
+tweets_geo_df =listdfs[0]
 # =============================================================================
-# for text_query in searchterms:
-#     #Dynamically create Data frames
-#     vars()[text_query] = twittsearch(text_query,since_date,until_date)
+# tweets_geo_df = twittsearch(text_query,since_date,until_date)
 # =============================================================================
-
-tweets_geo_df = twittsearch(text_query,since_date,until_date)[0]
-tweets_no_geo_df = twittsearch(text_query,since_date,until_date)[0]
+tweets_no_geo_df = listdfs[1]
 
 tweets_geo_df.to_csv(os.path.join(data_dir,"tweets_geo.csv"))
 tweets_no_geo_df.to_csv(os.path.join(data_dir,"tweets_no_geo.csv"))
