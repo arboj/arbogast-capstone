@@ -35,5 +35,8 @@ until_date = '2021-02-20'
 #     vars()[text_query] = twittsearch(text_query,since_date,until_date)
 # =============================================================================
 
-tweetdf = twittsearch(text_query,since_date,until_date)
-tweetdf.to_csv(os.path.join(data_dir,"tweets.csv"))
+tweets_geo_df = twittsearch(text_query,since_date,until_date)[0]
+tweets_no_geo_df = twittsearch(text_query,since_date,until_date)[0]
+
+tweets_geo_df.to_csv(os.path.join(data_dir,"tweets_geo.csv"))
+tweets_no_geo_df.to_csv(os.path.join(data_dir,"tweets_no_geo.csv"))
