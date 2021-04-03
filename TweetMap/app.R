@@ -64,14 +64,16 @@ ui <- dashboardPage(
             tabItem(tabName = "About",includeHTML("about.html")),
             ##INFO BOXES AND MAP OF US AND DYGRAPH PLOTS  
             tabItem(tabName = "globalmapdata",
+                    title= strong(textOutput("MapTitle")), width=12, 
+                        tags$div(id="mapdiv", style="width: 100%; height: 800px;"),
                     #### US INFO BOXES
                     #MAP and Dygraphs 
-                    box(title= strong(textOutput("MapTitle")), width=8,
-                        tags$div(id="mapdiv", style="width: 100%; height: 300px;")),
-                    box(width=4,strong("Date: "), textOutput("TwitterDate"), 
-                        strong("Tweet Text:"),textOutput("TwitterText"),
-                        strong("Found: "),textOutput("FoundWord"),
-                        strong("Geo Location: "),textOutput("GeoLocation")),
+                    # box(title= strong(textOutput("MapTitle")), width=12,
+                    #     tags$div(id="mapdiv", style="width: 100%; height: 300px;")),
+                    # box(width=4,strong("Date: "), textOutput("TwitterDate"), 
+                    #     strong("Tweet Text:"),textOutput("TwitterText"),
+                    #     strong("Found: "),textOutput("FoundWord"),
+                    #     strong("Geo Location: "),textOutput("GeoLocation")),
                     
                         #tags$syle(src='lege.css'),#
                     tags$script(src="latest_map_leaflet.js")

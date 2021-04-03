@@ -36,7 +36,7 @@ var geojsonMarkerOptions = {
 
 var geojson;
 
-/*
+
 var info = L.control();
 
 info.onAdd = function (map) {
@@ -48,15 +48,20 @@ info.onAdd = function (map) {
 // method that we will use to update the control based on feature properties passed
 info.update = function (props) {
     this._div.innerHTML = '<h4>Tweet Info</h4>' +  (props ?
-        '<b>' + props.name + '</b><br />' + props.density + ' people / mi<sup>2</sup>'
-        : 'Hover over a state');
+        '<b>Date: </b>' + props.Datetime + '<br/>' + 
+        '<b>Tweet Text: </b>' + props.Text + '<br/>' + 
+        '<b>Found: </b>' + props.FoundWord + '<br/>' + 
+        '<b>Geo Location: </b>' + props.place_name +"," + props.admin1 +"," + props.country_code3
+        : 'click for tweet info');
+        
 };
 
-info.addTo(mymap);*/
+info.addTo(mymap);
 
 function mouse_click (e)
 {
-
+var layer = e.target;
+info.update(layer.feature.properties);
 console.log(e);
 var TWID = this.options.myTweetID;
   console.log(TWID);
