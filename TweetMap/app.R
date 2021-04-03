@@ -42,42 +42,34 @@ ui <- dashboardPage(
         )
     ),
     dashboardBody(
-        # tags$script(
-        #   '$(".sidebar-toggle").on("click", function() { $(this).trigger("shown"); });'
-        # )
-        #leaflet
         tags$head(tags$link(rel = "stylesheet", type = "text/css",
                             href = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/leaflet.css")),
         tags$script(src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.3.1/leaflet.js"),
-        # 
-        # # load D3.js library
-        # tags$script(src="//d3js.org/d3.v4.min.js"),
-        # # load billboard library
-        # tags$head(tags$link(rel = "stylesheet", type = "text/css", href = "billboard.min.css")),
-        # tags$script(src="billboard.min.js"),
-        # 
-        # ###classybrew is an automatic classifier see https://github.com/tannerjt/classybrew for source code
-        # tags$script(src="classybrew.js"),
-        
         tabItems(
             #About the app - create an html document to reference  rather than clutter up the shiny app
             tabItem(tabName = "About",includeHTML("about.html")),
             ##INFO BOXES AND MAP OF US AND DYGRAPH PLOTS  
-            tabItem(tabName = "globalmapdata",
+            tabItem(
+                tags$head(tags$style(HTML(
+                    ".info {
+                        padding: 6px 8px;
+                        font: 14px/16px Arial, Helvetica, sans-serif;
+                        background: white;
+                        background: rgba(255,255,255,0.8);
+                        box-shadow: 0 0 15px rgba(0,0,0,0.2);
+                        border-radius: 5px;
+                        width: 250px
+                    }
+                    .info h4 {
+                        margin: 0 0 5px;
+                        color: #777;
+                    }"
+                ))),
+                tabName = "globalmapdata",
+                box(
                     title= strong(textOutput("MapTitle")), width=12, 
-                        tags$div(id="mapdiv", style="width: 100%; height: 800px;"),
-                    #### US INFO BOXES
-                    #MAP and Dygraphs 
-                    # box(title= strong(textOutput("MapTitle")), width=12,
-                    #     tags$div(id="mapdiv", style="width: 100%; height: 300px;")),
-                    # box(width=4,strong("Date: "), textOutput("TwitterDate"), 
-                    #     strong("Tweet Text:"),textOutput("TwitterText"),
-                    #     strong("Found: "),textOutput("FoundWord"),
-                    #     strong("Geo Location: "),textOutput("GeoLocation")),
-                    
-                        #tags$syle(src='lege.css'),#
-                    tags$script(src="latest_map_leaflet.js")
-                        # leafletOutput("tweetMap")
+                        tags$div(id="mapdiv", style="width: 100%; height: 700px;"),
+                    tags$script(src="latest_map_leaflet.js"))
                         
                     ),
             
@@ -95,32 +87,6 @@ server <- function(input, output, session) {
                                             # year(as.Date(max(dfUSOverall$Date)))
     )})
     session$sendCustomMessage("load_map_geo_data", tweets_geoJSON)
-    
-    observeEvent(input$click,
-                 {clicked_twitt = as.character(isolate(input$click[1]))
-                  tweet <- tweets_geo %>% filter(X1 == clicked_twitt)
-                     output$TwitterDate <- renderText({paste0(hour(tweet$Datetime),":",
-                                                              minute(tweet$Datetime),":",
-                                                              second(tweet$Datetime)," ",
-                                                              month(tweet$Datetime),"/",
-                                                              day(tweet$Datetime),"/",
-                                                              year(tweet$Datetime)
-                                                               )})
-                     ### twitter value boxes
-                     output$TwitterText <- renderText({tweet$Text})
-                     output$FoundWord <- renderText({tweet$FoundWord})
-                     output$GeoLocation <- renderText({paste0(tweet$place_name,", ",
-                                                              tweet$admin1,", ", 
-                                                              tweet$country_code3)})
-})
-    # output$tweetMap = renderLeaflet({
-    #     
-    #     map <- leaflet(tweets_geo, leafletOptions(zoomSnap = 0.25, minZoom = 5))%>% 
-    #         addTiles() %>% 
-    #         addCircleMarkers()
-    # 
-    #     
-    #     map})
 }
 
 # Run the application 

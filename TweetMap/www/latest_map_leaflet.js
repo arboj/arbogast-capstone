@@ -53,9 +53,10 @@ info.update = function (props) {
         '<b>Found: </b>' + props.FoundWord + '<br/>' + 
         '<b>Geo Location: </b>' + props.place_name +"," + props.admin1 +"," + props.country_code3
         : 'click for tweet info');
+
         
 };
-
+info.setPosition("topright");
 info.addTo(mymap);
 
 function mouse_click (e)
