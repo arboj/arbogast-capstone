@@ -62,13 +62,7 @@ function mouse_click (e)
 {
 var layer = e.target;
 info.update(layer.feature.properties);
-console.log(e);
-var TWID = this.options.myTweetID;
-  console.log(TWID);
-  //popup("You clicked the marker at Call Sign: " +  ID  + "IN THE STATE OF:" +  STATE + "Station: " + STATION );
-  // send this ID to the shiny server code through messaging 
-  Shiny.onInputChange("click", [TWID, Math.random()]);
-  console.log("click", [TWID, Math.random()]);
+
   }
 
 function handle_map_geo_data (msg){
