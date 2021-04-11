@@ -72,7 +72,7 @@ def twittsearch(text_query,since_date,until_date):
     tweet_no_geo = pd.DataFrame(tweets_list2, columns=
                               ['Datetime', 'TweetId', 'Text'])
 
-    tweets_geo_df.to_csv(os.path.join(tweet_dir,"tweets_geo.csv"))
-    tweets_no_geo_df.to_csv(os.path.join(data_dir,"tweets_no_geo.csv"))
+    tweets_geo_df.to_csv(os.path.join(tweet_dir,"tweets_geo.csv",index_label = 'index'))
+    tweets_no_geo_df.to_csv(os.path.join(data_dir,"tweets_no_geo.csv",index_label = 'index'))
 
 
