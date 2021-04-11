@@ -6,13 +6,34 @@
 #
 #    http://shiny.rstudio.com/
 #
-packages<-c("shiny","dplyr","stringr","tidyr","lubridate","TTR","dygraphs","leaflet", "rgdal","sp","rgeos",
-            "shinydashboard", "shinythemes","rjson", "xts", "RColorBrewer","readr")
-lapply(packages, library,character.only = TRUE)
+#Sys.setenv(RETICULATE_PYTHON="/Volumes/Elements/DataScience/anaconda3/envs/capstoneenv/bin/python3")
+# print("Sys.setenv(RETICULATE_PYTHON=/Volumes/Elements/DataScience/anaconda3/envs/capstoneenv/bin/python3")
+# packages<-c("shiny","dplyr","stringr","tidyr","lubridate","TTR","dygraphs","leaflet", "rgdal","sp","rgeos",
+#             "shinydashboard", "shinythemes","rjson", "xts", "RColorBrewer","readr","reticulate")
+# 
+# lapply(packages,library,character.only = TRUE)
+library(shiny)
+library(dplyr)
+library(stringr)
+library(tidyr)
+library(lubridate)
+library(TTR)
+library(dygraphs)
+library(leaflet)
+library(rgdal)
+library(sp)
+library(rgeos)
+library(shinydashboard)
+library(rjson)
+library(xts)
+library(RColorBrewer)
+library(readr)
 
-tweets_geo <- read_csv("tweets_geo.csv") 
-tweets_geo <- tweets_geo%>% drop_na()
-tweets_geo$TweetId<-as.character(tweets_geo$TweetId)
+#use_condaenv('capstoneenv')
+# py_run_file("capstone_twitter_search.py")
+tweets_geo <- read_csv("tweets_geo.csv")
+tweets_geo <- tweets_geo %>% drop_na()
+tweets_geo$TweetId <- as.character(tweets_geo$TweetId)
 #transform the df to json 
 coords = data.frame(tweets_geo$lon, tweets_geo$lat)
 wgs84 = CRS("+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs")

@@ -1,0 +1,10 @@
+name: tweetmap
+title:
+username:
+account: jarbo
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 3908699
+bundleId: 4430786
+url: https://jarbo.shinyapps.io/tweetmap/
+when: 1617566132.37022

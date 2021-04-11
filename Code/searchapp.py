@@ -11,16 +11,6 @@ Created on Mon Mar  1 18:34:55 2021
 from capstone_twitter_search import twittsearch
 import os
 import pandas as pd
-import folium
-
-# =============================================================================
-# 
-# import dash
-# import dash_core_components as dcc
-# import dash_html_components as html
-# 
-# import plotly.express as px
-# =============================================================================
 
 
 
@@ -31,7 +21,7 @@ data_dir = os.path.join(parent_dir,"Data")
 tweet_dir = os.path.join(parent_dir,"TweetMap")
 
 searchterms = ['snow','weather','power','freeze', 'ice', 'blackout','water']
-text_query = "snow OR weather OR power OR freeze OR ice OR blackout OR water'"
+text_query = "snow OR weather OR power OR freeze OR ice OR blackout OR water OR rain OR sleet OR hail OR storm OR blizzard"
 
 
 since_date = '2021-02-12'
@@ -52,22 +42,5 @@ tweets_no_geo_df.to_csv(os.path.join(data_dir,"tweets_no_geo.csv"))
 
 tweet_map = pd.read_csv(os.path.join(data_dir,"tweets_geo.csv"))
 
-
-
-# =============================================================================
-# fig = px.scatter_mapbox(tweet_map, lat="lat", lon="lon", hover_name="FoundWord", hover_data=["place_name", "Text", "Datetime"],
-#                         color_discrete_sequence=["fuchsia"],title="sample figure", zoom=3, height=500)
-# fig.update_layout(mapbox_style="open-street-map")
-# fig.update_layout(margin={"r":0,"t":0,"l":0,"b":0})
-# fig.show()
-# 
-# 
-# app = dash.Dash()
-# app.layout = html.Div([
-#     dcc.Graph(figure=fig)
-# ])
-# 
-# app.run_server(debug=True, use_reloader=False)  # Turn off reloader if inside Jupyter
-# =============================================================================
 
 
