@@ -70,6 +70,12 @@ def twittsearch(text_query,since_date,until_date):
                               ['Datetime', 'TweetId', 'Text'])
     return tweets_geo_df, tweet_no_geo
 
-
+# =============================================================================
+# text_query = "heat OR fire OR forestfire OR earthquake OR hea OR heatwave OR disaster OR typhoon OR cyclone OR tornado OR thunder OR lightning OR storm OR surge OR hail OR torrent"
+# since_date = '2021-07-01'
+# until_date = '2021-07-05'
+# 
+# twittsearch(text_query,since_date,until_date)
+# =============================================================================
 
 

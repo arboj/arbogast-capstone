@@ -208,8 +208,8 @@ embedding_matrix, vectorizer = make_embedding_matrix(train_samples, val_samples,
 print("embedded")
 print ("scrapeing ")
 text_query = "heat OR fire OR forestfire OR earthquake OR hea OR heatwave OR disaster OR typhoon OR cyclone OR tornado OR thunder OR lightning OR storm OR surge OR hail OR torrent"
-since_date = '2021-07-05'
-until_date = '2021-07-01'
+since_date = '2021-07-01'
+until_date = '2021-07-05'
 
 tweets_geo_df, tweets_no_geo_df  = twittsearch(text_query,since_date,until_date)
 print ("scraped ")
@@ -262,7 +262,7 @@ print("predicted")
 tweets_geo_df.to_csv(os.path.join(tweet_dir,"tweets_geo.csv"))
 tweets_no_geo_df.to_csv(os.path.join(data_dir,"tweets_no_geo.csv"))
 
-print(fin)
+print('fin')
 # =============================================================================
 # 
 # tweet_map = pd.read_csv(os.path.join(data_dir,"tweets_geo.csv"))
