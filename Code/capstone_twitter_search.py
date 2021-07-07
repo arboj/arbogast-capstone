@@ -13,9 +13,6 @@ parent_dir = os.path.dirname(code_dir)
 data_dir = os.path.join(parent_dir,"Data")
 tweet_dir = os.path.join(parent_dir,"TweetMap")
 
-text_query = "snow OR weather OR power OR freeze OR ice OR blackout OR water OR rain OR sleet OR hail OR storm OR blizzard"
-since_date = '2021-02-12'
-until_date = '2021-02-20'
 
 def twittsearch(text_query,since_date,until_date):
     print('Import modules')
@@ -37,7 +34,7 @@ def twittsearch(text_query,since_date,until_date):
     # Using TwitterSearchScraper to scrape data and append tweets to list
     
     for i,tweet in enumerate(sntwitter.TwitterSearchScraper(query).get_items()):
-        if i>10000:
+        if i>50000:
             break
         #### define locations column
         locations = geo.geoparse(tweet.content)
@@ -71,8 +68,8 @@ def twittsearch(text_query,since_date,until_date):
     
     tweet_no_geo = pd.DataFrame(tweets_list2, columns=
                               ['Datetime', 'TweetId', 'Text'])
+    return tweets_geo_df, tweet_no_geo
 
-    tweets_geo_df.to_csv(os.path.join(tweet_dir,"tweets_geo.csv",index_label = 'index'))
-    tweets_no_geo_df.to_csv(os.path.join(data_dir,"tweets_no_geo.csv",index_label = 'index'))
+
 
 
