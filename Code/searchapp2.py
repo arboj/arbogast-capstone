@@ -8,7 +8,7 @@ Created on Mon Mar  1 18:34:55 2021
 """
 
 
-from capstone_twitter_search import twittsearch
+from capstone_twitter_search2 import twittsearch
 import os
 import pandas as pd
 
