@@ -31,8 +31,8 @@ library(readr)
 
 #use_condaenv('capstoneenv')
 # py_run_file("capstone_twitter_search.py")
-tweets_geo <- read_csv("tweets_geo.csv")
-tweets_geo <- tweets_geo %>% drop_na()
+tweets_geo <- read_csv("result.csv")
+tweets_geo <- tweets_geo %>% drop_na()%>% filter(target == 0)
 tweets_geo$TweetId <- as.character(tweets_geo$TweetId)
 #transform the df to json 
 coords = data.frame(tweets_geo$lon, tweets_geo$lat)

@@ -48,7 +48,8 @@ info.onAdd = function (map) {
 // method that we will use to update the control based on feature properties passed
 info.update = function (props) {
     this._div.innerHTML = '<h4>Tweet Info</h4>' +  (props ?
-        '<b>Date: </b>' + props.Datetime + '<br/>' + 
+        '<b>Date: </b>' + props.Datetime + '<br/>' +
+        '<b>Informativeness O is yes: </b>' + props.target + '<br/>' +
         '<b>Tweet Text: </b>' + props.Text + '<br/>' + 
         '<b>Found: </b>' + props.FoundWord + '<br/>' + 
         '<b>Geo Location: </b>' + props.place_name +"," + props.admin1 +"," + props.country_code3
