@@ -8,7 +8,7 @@ Created on Mon Mar  1 18:34:55 2021
 """
 
 
-from capstone_twitter_search import twittsearch
+from capstone_twitter_search2 import twittsearch
 import os
 import pandas as pd
 
@@ -31,7 +31,11 @@ from tensorflow.keras import layers
 from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.callbacks import EarlyStopping
-
+from mordecai import Geoparser
+#from mordecai import batch_geoparse
+from flatten_json import flatten_json
+import numpy as np
+import json
 from tensorflow.keras import layers
 # =============================================================================
 # from kerastuner.tuners import RandomSearch
@@ -207,14 +211,35 @@ def make_embedding_matrix(train_samples, val_samples, embeddings_index):
 embedding_matrix, vectorizer = make_embedding_matrix(train_samples, val_samples, embeddings_index)
 print("embedded")
 print ("scrapeing ")
-text_query = "heat OR fire OR forestfire OR earthquake OR heat OR heatwave OR disaster OR typhoon OR cyclone OR tornado OR thunder OR lightning OR storm OR surge OR hail OR torrent"
-since_date = '2021-07-01'
-until_date = '2021-07-05'
+text_query = "heat OR fire OR forestfire OR earthquake OR heat OR heatwave OR disaster OR typhoon OR cyclone OR tornado OR thunder OR lightning OR storm OR surge OR hail OR torrent OR flood OR deluge"
+since_date = '2021-07-07'
+until_date = '2021-07-13'
 
-tweets_geo_df, tweets_no_geo_df  = twittsearch(text_query,since_date,until_date)
+tweets_df = twittsearch(text_query,since_date,until_date)
 print ("scraped ")
 print("processing ")
-twts = tweets_geo_df
+
+geo = Geoparser()
+tweets_df['geo'] = geo.batch_geoparse(tweets_df['Text'])
+df_js = pd.DataFrame()
+for row in range(len(tweets_df)):
+    print(row)
+    df_temp = pd.json_normalize(
+    tweets_df.geo[row], 
+    record_path =['spans'], 
+    meta=['word',"country_predicted", "country_conf",['geo',"admin1"],
+                               ['geo',"lat"],['geo',"lon"],['geo',"country_code3"],['geo',"geonameid"],['geo',"place_name"],
+                               ['geo',"feature_class"],['geo',"feature_code"]],
+    errors='ignore'
+)
+    df_temp['TweetId']=''
+    print(tweets_df['TweetId'][row])
+    for i in range(len(df_temp)):
+        df_temp['TweetId'][i]=tweets_df['TweetId'][row]
+    df_js=df_js.append(df_temp,ignore_index=True)
+        
+twts = pd.merge(tweets_df, df_js, on="TweetId")
+
 twts['ptext'] = twts['Text'].apply(lambda x: clean_text(x))
 twts['ptext'] = twts['ptext'].apply(lambda x: word_tokenize(x))
 twts['ptext'] = twts['ptext'].apply(lambda x : remove_stopwords(x))

@@ -32,7 +32,7 @@ from tensorflow.keras.layers.experimental.preprocessing import TextVectorization
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.callbacks import EarlyStopping
 from mordecai import Geoparser
-from mordecai import batch_geoparse
+#from mordecai import batch_geoparse
 from flatten_json import flatten_json
 import numpy as np
 
@@ -215,11 +215,13 @@ text_query = "heat OR fire OR forestfire OR earthquake OR heat OR heatwave OR di
 since_date = '2021-07-01'
 until_date = '2021-07-05'
 
-tweets_df  = twittsearch(text_query,since_date,until_date)
+twts  = twittsearch(text_query,since_date,until_date)
 print ("scraped ")
 print("processing ")
-twts = tweets_df
-glist = geo.batch_geoparse(tweets_df['Text'])
+
+geo = Geoparser()
+glist = geo.batch_geoparse(twts['Text'])
+
 twts['ptext'] = twts['Text'].apply(lambda x: clean_text(x))
 twts['ptext'] = twts['ptext'].apply(lambda x: word_tokenize(x))
 twts['ptext'] = twts['ptext'].apply(lambda x : remove_stopwords(x))
