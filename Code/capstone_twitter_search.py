@@ -32,7 +32,7 @@ def twittsearch(text_query,since_date,until_date):
     # Using TwitterSearchScraper to scrape data and append tweets to list
     
     for i,tweet in enumerate(sntwitter.TwitterSearchScraper(query).get_items()):
-        if i>100000:
+        if i>1000000:
             break
         tweets_list.append([tweet.date, tweet.id, tweet.content])
 

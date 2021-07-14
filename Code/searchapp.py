@@ -8,7 +8,7 @@ Created on Mon Mar  1 18:34:55 2021
 """
 
 
-from capstone_twitter_search2 import twittsearch
+from capstone_twitter_search import twittsearch
 import os
 import pandas as pd
 
@@ -284,8 +284,10 @@ print("predicted")
 # tweets_geo_df = twittsearch(text_query,since_date,until_date)
 # =============================================================================
 
-tweets_geo_df.to_csv(os.path.join(tweet_dir,"tweets_geo.csv"))
-tweets_no_geo_df.to_csv(os.path.join(data_dir,"tweets_no_geo.csv"))
+# =============================================================================
+# tweets_geo_df.to_csv(os.path.join(tweet_dir,"tweets_geo.csv"))
+# tweets_no_geo_df.to_csv(os.path.join(data_dir,"tweets_no_geo.csv"))
+# =============================================================================
 
 print('fin')
 # =============================================================================
