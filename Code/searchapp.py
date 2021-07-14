@@ -37,6 +37,17 @@ from flatten_json import flatten_json
 import numpy as np
 import json
 from tensorflow.keras import layers
+import text_proccessing
+from text_proccessing import clean_text
+from text_proccessing import remove_stopwords
+from text_proccessing import lemmatize_text
+from text_proccessing import concatenate_text
+from text_proccessing import makeglove
+from text_proccessing import make_embedding_matrix
+import modhelp
+from modhelp import train_val_split
+from modhelp import geo_df
+from modhelp import suggest_nn2
 # =============================================================================
 # from kerastuner.tuners import RandomSearch
 # from kerastuner.tuners import BayesianOptimization
@@ -48,7 +59,7 @@ from tensorflow.keras import layers
 # nltk.download('stopwords')
 # nltk.download('wordnet')
 # =============================================================================
-
+overallstart = datetime.datetime.now() 
 code_dir = os.getcwd()
 print("Current working directory: {0}".format(code_dir))
 parent_dir = os.path.dirname(code_dir)
@@ -59,218 +70,85 @@ dsa= os.path.dirname(parent_dir)
  
 train_data = pd.read_csv(os.path.join(directory, 'InformativenessTrain_Processed.csv'))
 print('cleaning')
-def clean_text(text):
-    '''Make text lowercase, remove links,remove punctuation
-    and remove words containing numbers.'''
-    text = text.lower()
-    #get rid of usernames
-    tweet_words = text.strip('\r').split(' ')
-    for word in [word for word in tweet_words if '@' in word]:
-            
-            text = text.replace(word, "")
-    #get rid of the re-tweet
-    tweet_words = text.strip('\r').split(' ')
-    for word in [word for word in tweet_words if 'rt' == word]:
-            
-            text = text.replace(word, "")
-            
-    text = re.sub('https?://\S+|www\.\S+', '', text)
-    text = re.sub('[%s]' % re.escape(punctuation), '', text)
-    text = re.sub('\n', '', text)
-    text = re.sub('\w*\d\w*', '', text)
-    return text
-
+start =  datetime.datetime.now() 
 # Applying the cleaning function to both test and train datasets
 train_data['text'] = train_data['text'].apply(lambda x: clean_text(x))
 
 train_data['text'] = train_data['text'].apply(lambda x:word_tokenize(x))
-print('cleand and totkeninzed')
+end =  datetime.datetime.now() 
+print('cleand and totkeninzed{}'.format(end-start))
+
 print('rv stop words')
-def remove_stopwords(text):
-    words = [w for w in text if w not in stopwords.words('english')]
-    return words 
-
+start =  datetime.datetime.now() 
 train_data['text'] = train_data['text'].apply(lambda x : remove_stopwords(x))
-print('rvd stop words')
+end =  datetime.datetime.now() 
+print('rvd stop words{}'.format(end-start))
+
 print('lemmatime')
-def lemmatize_text(text):
-    lemmatizer = WordNetLemmatizer()
-    return [lemmatizer.lemmatize(w) for w in text]  ##Notice the use of text.
-
+start =  datetime.datetime.now() 
 train_data['text'] = train_data['text'].apply(lambda x : lemmatize_text(x))
+end =  datetime.datetime.now() 
+print('lemmad in {}'.format(end-start))
 
-def concatenate_text(text):
-    return ' '.join(text)
-
+print('concat')
+start =  datetime.datetime.now() 
 train_data['text'] = train_data['text'].apply(lambda x : concatenate_text(x))
+end =  datetime.datetime.now() 
+print('concated in {}'.format(end-start))
 
-
-
-
-def train_val_split(df, validation_split):
-    """
-    This function generates the training and validation splits from an input dataframe
-    
-    Parameters:
-        dataframe: pandas dataframe with columns "text" and "target" (binary)
-        validation_split: should be between 0.0 and 1.0 and represent the proportion of the dataset to include in the validation split
-    
-    Returns:
-        train_samples: list of strings in the training dataset
-        val_samples: list of strings in the validation dataset
-        train_labels: list of labels (0 or 1) in the training dataset
-        val_labels: list of labels (0 or 1) in the validation dataset      
-    """
-       
-    text = df['text'].values.tolist()                         # input text as list
-    targets = df['class_label_cat'].values.tolist()                    # targets
-    
-#   Preparing the training/validation datasets
-    
-    seed = random.randint(1,50)   # random integer in a range (1, 50)
-    rng = np.random.RandomState(seed)
-    rng.shuffle(text)
-    rng = np.random.RandomState(seed)
-    rng.shuffle(targets)
-
-    num_validation_samples = int(validation_split * len(text))
-
-    train_samples = text[:-num_validation_samples]
-    val_samples = text[-num_validation_samples:]
-    train_labels = targets[:-num_validation_samples]
-    val_labels = targets[-num_validation_samples:]
-    
-    print(f"Total size of the dataset: {df.shape[0]}.")
-    print(f"Training dataset: {len(train_samples)}.")
-    print(f"Validation dataset: {len(val_samples)}.")
-    
-    return train_samples, val_samples, train_labels, val_labels
-
+print('splitthis')
+start =  datetime.datetime.now() 
 train_samples, val_samples, train_labels, val_labels = train_val_split(train_data, 0.25)
-print ('Text done')
+end =  datetime.datetime.now() 
+print ('Text done {}'.format(end-start))
 
-print('Loading model and glove')
+print('Loading model,embedding and glove')
+start =  datetime.datetime.now() 
 model = tf.keras.models.load_model(os.path.join(dsa,'model1'))
 path_to_glove_file = os.path.join(dsa,'WordVector','glove.twitter.27B.200d.txt')
-embeddings_index = {}
-f = open(path_to_glove_file, 'r', encoding='utf8')
-for line in f:
-    splitLine = line.split(' ')
-    word = splitLine[0]                                  # the first entry is the word
-    coefs = np.asarray(splitLine[1:], dtype='float32')   # these are the vectors representing word embeddings
-    embeddings_index[word] = coefs
-print("Glove data loaded! In total:",len(embeddings_index)," words.")
-print("Get embedd")
-
-def make_embedding_matrix(train_samples, val_samples, embeddings_index):
-    
-    """
-    This function computes the embedding matrix that will be used in the embedding layer
-    
-    Parameters:
-        train_samples: list of strings in the training dataset
-        val_samples: list of strings in the validation dataset
-        embeddings_index: Python dictionary with word embeddings
-    
-    Returns:
-        embedding_matrix: embedding matrix with the dimensions (num_tokens, embedding_dim), 
-        where num_tokens is the vocabulary of the input data, 
-        and emdebbing_dim is the number of components in the GloVe vectors (can be 50,100,200,300)
-        vectorizer: TextVectorization layer      
-    """
-    
-    vectorizer = TextVectorization(max_tokens=55000, output_sequence_length=50)
-    text_ds = tf.data.Dataset.from_tensor_slices(train_samples).batch(128)
-    vectorizer.adapt(text_ds)
-    
-    voc = vectorizer.get_vocabulary()
-    word_index = dict(zip(voc, range(len(voc))))
-      
-    num_tokens = len(voc)
-    
-    hits = 0
-    misses = 0
-
-#   creating an embedding matrix
-    embedding_dim = len(embeddings_index['the'])
-    embedding_matrix = np.zeros((num_tokens, embedding_dim))
-    for word, i in word_index.items():
-        embedding_vector = embeddings_index.get(word)
-        if embedding_vector is not None:
-            # Words not found in embedding index will be all-zeros
-            embedding_matrix[i] = embedding_vector
-            hits += 1
-        else:
-            misses += 1
-
-#     print("Converted %d words (%d misses)" % (hits, misses))
-    print(f"Converted {hits} words ({misses} misses).")
-
-    return embedding_matrix, vectorizer
+embeddings_index=makeglove (path_to_glove_file)
 
 embedding_matrix, vectorizer = make_embedding_matrix(train_samples, val_samples, embeddings_index)
-print("embedded")
+end =  datetime.datetime.now() 
+
+print("embedded in {}".format(end-start))
+
+
 print ("scrapeing ")
-text_query = "heat OR fire OR forestfire OR earthquake OR heat OR heatwave OR disaster OR typhoon OR cyclone OR tornado OR thunder OR lightning OR storm OR surge OR hail OR torrent OR flood OR deluge"
+scrapestart =  datetime.datetime.now() 
+text_query = "heat OR fire OR forestfire OR earthquake OR heatwave OR disaster OR typhoon OR cyclone OR tornado OR thunder OR lightning  OR hail OR torrent OR flood OR deluge"
 since_date = '2021-07-07'
 until_date = '2021-07-13'
 
 tweets_df = twittsearch(text_query,since_date,until_date)
-print ("scraped ")
-print("processing ")
+scrapeend =  datetime.datetime.now() 
+print ("scraped {}".format(scrapeend-scrapestart))
 
-geo = Geoparser()
-tweets_df['geo'] = geo.batch_geoparse(tweets_df['Text'])
-df_js = pd.DataFrame()
-for row in range(len(tweets_df)):
-    print(row)
-    df_temp = pd.json_normalize(
-    tweets_df.geo[row], 
-    record_path =['spans'], 
-    meta=['word',"country_predicted", "country_conf",['geo',"admin1"],
-                               ['geo',"lat"],['geo',"lon"],['geo',"country_code3"],['geo',"geonameid"],['geo',"place_name"],
-                               ['geo',"feature_class"],['geo',"feature_code"]],
-    errors='ignore'
-)
-    df_temp['TweetId']=''
-    print(tweets_df['TweetId'][row])
-    for i in range(len(df_temp)):
-        df_temp['TweetId'][i]=tweets_df['TweetId'][row]
-    df_js=df_js.append(df_temp,ignore_index=True)
-        
+
+print("Run geoprocessing over tweets")
+geostart =  datetime.datetime.now() 
+df_js = geo_df(tweets_df) 
+geoend = datetime.datetime.now() 
+print ("scraped {}".format(geoend-geostart))
+
+print("merge the dfs")       
 twts = pd.merge(tweets_df, df_js, on="TweetId")
 
+
+print("processing ")
+procstart =  datetime.datetime.now() 
 twts['ptext'] = twts['Text'].apply(lambda x: clean_text(x))
 twts['ptext'] = twts['ptext'].apply(lambda x: word_tokenize(x))
 twts['ptext'] = twts['ptext'].apply(lambda x : remove_stopwords(x))
 twts['ptext'] = twts['ptext'].apply(lambda x : lemmatize_text(x))
 twts['ptext'] = twts['ptext'].apply(lambda x : concatenate_text(x))
-print("processed")
+procend=  datetime.datetime.now() 
+print("processed {}".format(procend - procstart))
+
 print("predict")
-def suggest_nn2(df, model):
-    """
-    This function generates (binary) targets from a dataframe with column "text" using trained Keras model
-    
-    Parameters:
-        df: pandas dataframe with column "text"
-        model: Keras model (trained)
-    
-    Output:
-        predictions: list of suggested targets corresponding to string entries from the column "text"
-    """
-    
-    string_input = keras.Input(shape=(1,), dtype="string")
-    x = vectorizer(string_input)
-    preds = model(x)
-    end_to_end_model = keras.Model(string_input, preds)
+predstart = datetime.datetime.now() 
 
-    probabilities = end_to_end_model.predict(df["ptext"])
-    
-    predictions = [1 if i > 0.5 else 0 for i in probabilities]
-    
-    return predictions
-
-predictions = suggest_nn2(twts, model)
+predictions = suggest_nn2(twts, model,vectorizer)
 
 submission_data = {"ID": twts['TweetId'].tolist(),"tweet": twts['Text'].tolist(), "target": predictions}
 
@@ -278,7 +156,8 @@ submission_df = pd.DataFrame(submission_data)
 result = twts.join(submission_df.target)
 
 result.to_csv(os.path.join(tweet_dir,'result.csv'),index =False)
-print("predicted")
+predend = datetime.datetime.now() 
+print("predicted {}".format(predend-predstart))
 
 # =============================================================================
 # tweets_geo_df = twittsearch(text_query,since_date,until_date)
@@ -288,8 +167,8 @@ print("predicted")
 # tweets_geo_df.to_csv(os.path.join(tweet_dir,"tweets_geo.csv"))
 # tweets_no_geo_df.to_csv(os.path.join(data_dir,"tweets_no_geo.csv"))
 # =============================================================================
-
-print('fin')
+overallend = datetime.datetime.now() 
+print('fin in {}'.format(overallend-overallstart))
 # =============================================================================
 # 
 # tweet_map = pd.read_csv(os.path.join(data_dir,"tweets_geo.csv"))

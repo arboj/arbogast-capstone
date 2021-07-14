@@ -33,6 +33,12 @@ pd.DataFrame(tweets_geo_list, columns=
                                "lat","lon","country_code3","geonameid","place_name",
                                "feature_class","feature_code"])
 
+df_js.rename(columns = {'TweetId':'TweetId', 'start':'start', 'end':'end', 'word':'word',
+ 'country_predicted':'country_predicted', 'country_conf': 'country_conf',
+       'geo.admin1':'admin1', 'geo.lat':'lat', 'geo.lon':'lon', 'geo.country_code3':'country_code3',
+       'geo.geonameid':'geonameid', 'geo.place_name':'place_name', 'geo.feature_class':'feature_class',
+       'geo.feature_code':'feature_code'})
+
 
 df_js = pd.DataFrame()
 for row in range(len(tweets_df)):
