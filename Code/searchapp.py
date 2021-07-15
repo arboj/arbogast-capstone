@@ -44,6 +44,8 @@ from text_proccessing import lemmatize_text
 from text_proccessing import concatenate_text
 from text_proccessing import makeglove
 from text_proccessing import make_embedding_matrix
+import append_df
+from append_df import append_df
 import modhelp
 from modhelp import train_val_split
 from modhelp import geo_df
@@ -117,26 +119,32 @@ print("embedded in {}".format(end-start))
 print ("scrapeing ")
 scrapestart =  datetime.datetime.now()
 print(scrapestart) 
-text_query = "heat OR fire OR forestfire OR earthquake OR heatwave OR disaster OR typhoon OR cyclone OR tornado OR thunder OR lightning  OR hail OR torrent OR flood OR deluge"
-since_date = '2021-07-07'
-until_date = '2021-07-13'
-
-tweets_df = twittsearch(text_query,since_date,until_date)
-scrapeend =  datetime.datetime.now() 
-print ("scraped ended at {} total {}".format(scrapeend, scrapeend-scrapestart))
-
-
-print("Run geoprocessing over tweets")
-
-geostart =  datetime.datetime.now() 
-print(geostart)
-df_js = geo_df(tweets_df) 
-geoend = datetime.datetime.now() 
-print ("geo ended at  {} for a total time of {} ".format(geoend, geoend-geostart))
-
-print("merge the dfs")       
-twts = pd.merge(tweets_df, df_js, on="TweetId")
-
+# =============================================================================
+# text_query = "heat OR fire OR forestfire OR earthquake OR heatwave OR disaster OR typhoon OR cyclone OR tornado OR thunder OR lightning  OR hail OR torrent OR flood OR deluge"
+# since_date = '2021-07-07'
+# until_date = '2021-07-13'
+# 
+# tweets_df = twittsearch(text_query,since_date,until_date)
+# =============================================================================
+twts = append_df(tweet_dir)
+print("working over {} records".format(len(twts)))
+# =============================================================================
+# scrapeend =  datetime.datetime.now() 
+# print ("scraped ended at {} total {}".format(scrapeend, scrapeend-scrapestart))
+# 
+# 
+# print("Run geoprocessing over tweets")
+# 
+# geostart =  datetime.datetime.now() 
+# print(geostart)
+# df_js = geo_df(tweets_df) 
+# geoend = datetime.datetime.now() 
+# print ("geo ended at  {} for a total time of {} ".format(geoend, geoend-geostart))
+# 
+# print("merge the dfs")       
+# twts = pd.merge(tweets_df, df_js, on="TweetId")
+# 
+# =============================================================================
 
 print("processing ")
 procstart =  datetime.datetime.now() 
@@ -159,8 +167,20 @@ submission_df = pd.DataFrame(submission_data)
 result = twts.join(submission_df.target)
 
 result.to_csv(os.path.join(tweet_dir,'result.csv'),index =False)
+result_inf = result[result['target']==0]
+print("working over {} informative tweets".format(len(result_inf)))
 predend = datetime.datetime.now() 
 print("predicted {}".format(predend-predstart))
+
+print("Run geoprocessing over tweets")
+
+geostart =  datetime.datetime.now() 
+print(geostart)
+df_js = geo_df(result_inf) 
+geoend = datetime.datetime.now() 
+print ("geo ended at  {} for a total time of {} ".format(geoend, geoend-geostart))
+
+
 
 # =============================================================================
 # tweets_geo_df = twittsearch(text_query,since_date,until_date)
