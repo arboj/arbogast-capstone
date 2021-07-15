@@ -115,21 +115,24 @@ print("embedded in {}".format(end-start))
 
 
 print ("scrapeing ")
-scrapestart =  datetime.datetime.now() 
+scrapestart =  datetime.datetime.now()
+print(scrapestart) 
 text_query = "heat OR fire OR forestfire OR earthquake OR heatwave OR disaster OR typhoon OR cyclone OR tornado OR thunder OR lightning  OR hail OR torrent OR flood OR deluge"
 since_date = '2021-07-07'
 until_date = '2021-07-13'
 
 tweets_df = twittsearch(text_query,since_date,until_date)
 scrapeend =  datetime.datetime.now() 
-print ("scraped {}".format(scrapeend-scrapestart))
+print ("scraped ended at {} total {}".format(scrapeend, scrapeend-scrapestart))
 
 
 print("Run geoprocessing over tweets")
+
 geostart =  datetime.datetime.now() 
+print(geostart)
 df_js = geo_df(tweets_df) 
 geoend = datetime.datetime.now() 
-print ("scraped {}".format(geoend-geostart))
+print ("geo ended at  {} for a total time of {} ".format(geoend, geoend-geostart))
 
 print("merge the dfs")       
 twts = pd.merge(tweets_df, df_js, on="TweetId")

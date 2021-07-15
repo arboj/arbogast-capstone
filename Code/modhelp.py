@@ -53,12 +53,11 @@ def train_val_split(df, validation_split):
 def geo_df(tweets_df):
     
     geo = Geoparser()
-    tweets_df['geo'] = geo.batch_geoparse(tweets_df['Text'])
+    geos = geo.batch_geoparse(tweets_df['Text'])
+    
     df_js = pd.DataFrame()
     for row in range(len(tweets_df)):
-        df_temp = pd.json_normalize(
-        tweets_df.geo[row], 
-        record_path =['spans'], 
+        df_temp = pd.json_normalize( geos[row], record_path =['spans'], 
         meta=['word',"country_predicted", "country_conf",['geo',"admin1"],
               ['geo',"lat"],['geo',"lon"],['geo',"country_code3"],['geo',"geonameid"],
               ['geo',"place_name"],['geo',"feature_class"],['geo',"feature_code"]],
