@@ -23,6 +23,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 def clean_text(text):
     '''Make text lowercase, remove links,remove punctuation
     and remove words containing numbers.'''
+    #text=str(text)
     text = text.lower()
     #get rid of usernames
     tweet_words = text.strip('\r').split(' ')

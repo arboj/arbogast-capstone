@@ -18,8 +18,8 @@ def append_df(tweet_dir):
     
     for table in os.listdir(tweet_dir):
         if table.startswith("tweets"):
-            tempdf = pd.read_csv(os.path.join(tweet_dir,table))
+            tempdf = pd.read_csv(os.path.join(tweet_dir,table), engine = 'python', )
             tempdf = tempdf[['Datetime', 'TweetId', 'Text']]
             tweets_df = tweets_df.append(tempdf)      
-            
+    tweets_df['Text'] = tweets_df['Text'].astype(str)        
     return tweets_df

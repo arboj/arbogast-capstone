@@ -62,6 +62,7 @@ from modhelp import suggest_nn2
 # nltk.download('wordnet')
 # =============================================================================
 overallstart = datetime.datetime.now() 
+print ("started at: {}".format(overallstart))
 code_dir = os.getcwd()
 print("Current working directory: {0}".format(code_dir))
 parent_dir = os.path.dirname(code_dir)
@@ -69,47 +70,55 @@ data_dir = os.path.join(parent_dir,"Data")
 tweet_dir = os.path.join(parent_dir,"TweetMap")
 directory = os.path.join(data_dir,'splits')
 dsa= os.path.dirname(parent_dir)
- 
-train_data = pd.read_csv(os.path.join(directory, 'InformativenessTrain_Processed.csv'))
-print('cleaning')
+readstart = datetime.datetime.now() 
+print ("{} - reading csv started".format(readstart))
+train_data = pd.read_csv(os.path.join(directory, 'InformativenessTrain_Tokenized.csv'),engine='python')
+train_data['text']= train_data['text'].astype(str)
+readend = datetime.datetime.now()
+print ("{} - reading csv ended. Total time {}".format(readend,readend-readstart))
+# =============================================================================
+# print('cleaning')
+# start =  datetime.datetime.now() 
+# # Applying the cleaning function to both test and train datasets
+# train_data['text'] = train_data['text'].apply(lambda x: clean_text(x))
+# 
+# train_data['text'] = train_data['text'].apply(lambda x:word_tokenize(x))
+# end =  datetime.datetime.now() 
+# print('cleand and totkeninzed{}'.format(end-start))
+# 
+# print('rv stop words')
+# start =  datetime.datetime.now() 
+# train_data['text'] = train_data['text'].apply(lambda x : remove_stopwords(x))
+# end =  datetime.datetime.now() 
+# print('rvd stop words{}'.format(end-start))
+# 
+# print('lemmatime')
+# start =  datetime.datetime.now() 
+# train_data['text'] = train_data['text'].apply(lambda x : lemmatize_text(x))
+# end =  datetime.datetime.now() 
+# print('lemmad in {}'.format(end-start))
+# 
+# print('concat')
+# start =  datetime.datetime.now() 
+# train_data['text'] = train_data['text'].apply(lambda x : concatenate_text(x))
+# end =  datetime.datetime.now() 
+# print('concated in {}'.format(end-start))
+# =============================================================================
 start =  datetime.datetime.now() 
-# Applying the cleaning function to both test and train datasets
-train_data['text'] = train_data['text'].apply(lambda x: clean_text(x))
-
-train_data['text'] = train_data['text'].apply(lambda x:word_tokenize(x))
-end =  datetime.datetime.now() 
-print('cleand and totkeninzed{}'.format(end-start))
-
-print('rv stop words')
-start =  datetime.datetime.now() 
-train_data['text'] = train_data['text'].apply(lambda x : remove_stopwords(x))
-end =  datetime.datetime.now() 
-print('rvd stop words{}'.format(end-start))
-
-print('lemmatime')
-start =  datetime.datetime.now() 
-train_data['text'] = train_data['text'].apply(lambda x : lemmatize_text(x))
-end =  datetime.datetime.now() 
-print('lemmad in {}'.format(end-start))
-
-print('concat')
-start =  datetime.datetime.now() 
-train_data['text'] = train_data['text'].apply(lambda x : concatenate_text(x))
-end =  datetime.datetime.now() 
-print('concated in {}'.format(end-start))
-
-print('splitthis')
-start =  datetime.datetime.now() 
+print('splitthis started at: {}'.format(start))
 train_samples, val_samples, train_labels, val_labels = train_val_split(train_data, 0.25)
 end =  datetime.datetime.now() 
 print ('Text done {}'.format(end-start))
-
-print('Loading model,embedding and glove')
 start =  datetime.datetime.now() 
-model = tf.keras.models.load_model(os.path.join(dsa,'model1'))
-path_to_glove_file = os.path.join(dsa,'WordVector','glove.twitter.27B.200d.txt')
-embeddings_index=makeglove (path_to_glove_file)
+print('Loading model,embedding and glove commenced at  {}'.format(start))
 
+model = tf.keras.models.load_model(os.path.join(dsa,'model1'))
+print("loading vecotor")
+path_to_glove_file = os.path.join(dsa,'WordVector','glove.twitter.27B.200d.txt')
+
+print("indexing")
+embeddings_index=makeglove(path_to_glove_file)
+print("matrix and vectorize")
 embedding_matrix, vectorizer = make_embedding_matrix(train_samples, val_samples, embeddings_index)
 end =  datetime.datetime.now() 
 
