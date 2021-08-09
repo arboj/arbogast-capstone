@@ -50,32 +50,45 @@ def train_val_split(df, validation_split):
     
     return train_samples, val_samples, train_labels, val_labels
 
-def geo_df(tweets_df):
+def geo_df(df,geo):
     
-    geo = Geoparser()
-    geos = geo.batch_geoparse(tweets_df['Text'])
-    
-    df_js = pd.DataFrame()
-    for row in range(len(tweets_df)):
-        df_temp = pd.json_normalize( geos[row], record_path =['spans'], 
-        meta=['word',"country_predicted", "country_conf",['geo',"admin1"],
-              ['geo',"lat"],['geo',"lon"],['geo',"country_code3"],['geo',"geonameid"],
-              ['geo',"place_name"],['geo',"feature_class"],['geo',"feature_code"]],
-        errors='ignore'
-    )
-        df_temp['TweetId']=''
-        for i in range(len(df_temp)):
-            df_temp['TweetId'][i]=tweets_df['TweetId'][row]
-        df_js=df_js.append(df_temp,ignore_index=True)
-        
-    df_js = df_js.rename(columns = {'TweetId':'TweetId', 'start':'start', 'end':'end', 
-                                    'word':'word','country_predicted':'country_predicted', 
-                                    'country_conf': 'country_conf','geo.admin1':'admin1', 
-                                    'geo.lat':'lat', 'geo.lon':'lon', 
-                                    'geo.country_code3':'country_code3','geo.geonameid':'geonameid', 
-                                    'geo.place_name':'place_name', 
-                                    'geo.feature_class':'feature_class','geo.feature_code':'feature_code'})
-    return df_js
+# =============================================================================
+#     geo = Geoparser()
+# =============================================================================
+    df['geos'] = geo.batch_geoparse(df['Text'])
+    df_geo = df[df["geos"].str.len() != 0]
+    df_geo = df_geo.explode('geos')
+    df_geo = pd.concat([df_geo.drop(['geos'], axis=1), df_geo['geos'].apply(pd.Series)], axis=1)
+    df_geo = pd.concat([df_geo.drop(['geo'], axis=1), df_geo['geo'].apply(pd.Series)], axis=1)
+    df_geo = df_geo[df_geo['lat'].notnull()]
+    df_geo.lat = df_geo.lat.astype(float)
+    df_geo.lon =df_geo.lon.astype(float)
+    return df_geo
+
+#     df_js = pd.DataFrame()
+#     for row in range(len(result_inf)):
+#         df_temp = pd.json_normalize(result_inf['geos'], record_path =['spans'], 
+#         meta=['word',"country_predicted", "country_conf",['geo',"admin1"],
+#               ['geo',"lat"],['geo',"lon"],['geo',"country_code3"],['geo',"geonameid"],
+#               ['geo',"place_name"],['geo',"feature_class"],['geo',"feature_code"]],
+#         errors='ignore'
+#     )
+#         df_temp['TweetId']=''
+#         for i in range(len(df_temp)):
+#             df_temp['TweetId'][i]=tweets_df['TweetId'][row]
+#         df_js=df_js.append(df_temp,ignore_index=True)
+
+#     df_js = df_js.rename(columns = {'TweetId':'TweetId', 'start':'start', 'end':'end', 
+#                                     'word':'word','country_predicted':'country_predicted', 
+#                                     'country_conf': 'country_conf','geo.admin1':'admin1', 
+#                                     'geo.lat':'lat', 'geo.lon':'lon', 
+#                                     'geo.country_code3':'country_code3','geo.geonameid':'geonameid', 
+#                                     'geo.place_name':'place_name', 
+#                                     'geo.feature_class':'feature_class','geo.feature_code':'feature_code'})
+#     return df_js
+
+
+
 
 def suggest_nn2(df, model, vectorizer):
     """

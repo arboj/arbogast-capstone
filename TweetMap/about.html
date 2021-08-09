@@ -1,33 +1,104 @@
 <!DOCTYPE html>
 <html>
+<head>
+<style>
+div.a {
+  text-indent:2em;
+}
+div.b {
+  
+  margin-left: 4em;
+}
+
+</style>
+</head>
 <body>
-<h1>About the Application</h1>
+<h1>Explore Locations Mentioned in Natural Disaster Tweets</h1>
 <h4>Author: Jason Arbogast</h4>
 
 
-<p><b>Introduction:</b>
-<br>Welcome to the Disaster Mapping Explorer. This tool scrapes twitter and runs an alogorithm to discover locations of disaters <b>Center for Systems Science and Engineering (CSSE) at Johns Hopkins University.</b></p>
+<p><b>Introduction:</b></p>
+<div class="a">
+<p>Welcome to The Natural Disaster Tweet Mapper. With this tool you can explore hot spot locations for emerging Natural Disaster locations. Twitter posts are scraped and classified for natural disaster "informativeness" using natural language processing and a recurrent neural network. Informative tweets are then parsed for location names using the Mordecai geoparsing module, which leverages Named Entity Recognition and a machine learning algorithm to predict a match for the location and georeferenced using Elastic Search of geonames. </p>
+</div>
 
-<p><b>Contents:</b>
-<br>Tab1:some stuff will go here
-<br>Tab2: some differenter stuff with go here
-</p>
+<p><b>Contents:</b></p>
+<div class="a">
+<p><b>Map Mentioned Locations:</b> Explore and Map tweet clusters at the global, country, and first order admin level. A word cloud of most frequent terms is displayed along with a map. Tweets can be filtered by dates and time and four disaster groups.</p>
+</div>
 
-<p><b>Data Used:</b>
-the Data
-</p>
+<div class="a">
+<b>Group Filters:</b>
+</div>
+<div class="b"><b>
+Fire and Heat Related</b> - Filters tweets related to wildfire, extreme heat and heat waves
+</div>
+<div class="b"><b>Geological/Movement</b> - Filters for tweets related to Geological events and mass movements such as landslides , tsunamis, earthquakes, volcanic activity, avalanches , and sinkholes</div>
+<div class="b"><b>Severe Weather</b> - Filters for tweets related to Severe weather such as thunderstorms, blizzards, tornados, and hail</div>
+<div class="b"><b>Tropical Weather</b> -  Filters for tweets related to tropical weather such as Hurricanes, Typhoons, Cyclones, and Tropical Storms</div>
+<div class="b"><b>Floods</b>  -  Filters for  tweets relating to flood activity
+</div>
 
+<div class="a"><p><b>Data Table:</b> View Table of filtered tweets and export to csv file.</p></div>
+
+
+<br><b>Training Data:</b>
+<br>
+<a href="https://crisisnlp.qcri.org/crisis_datasets_benchmarks.html" target="_blank">Crisis Benchmark data for training Models</a>
+
+<p>The crisis benchmark dataset consists data from several different data sources such as CrisisLex (<a href="http://crisislex.org/data-collections.html#CrisisLexT26" target="_blank">CrisisLex26</a>, <a href="http://crisislex.org/data-collections.html#CrisisLexT6" target="_blank">CrisisLex6</a>), <a href="https://crisisnlp.qcri.org/lrec2016/lrec2016.html" target="_blank">CrisisNLP</a>, <a href="http://mimran.me/papers/imran_shady_carlos_fernando_patrick_practical_2013.pdf" target="_blank">SWDM2013</a>, <a href="http://mimran.me/papers/imran_shady_carlos_fernando_patrick_iscram2013.pdf" target="_blank">ISCRAM13</a>, Disaster Response Data (DRD), <a href="https://data.world/crowdflower/disasters-on-social-media" target="_blank">Disasters on Social Media (DSM)</a>, <a href="https://crisisnlp.qcri.org/crisismmd" target="_blank">CrisisMMD</a> and data from <a href="http://aidr.qcri.org/" target="_blank">AIDR</a>. 
+	  The class label was mapped, remove duplicates removed and this was provided as a benchmark results for the community. </p>
+
+The authors have their model and data availible on github at <a href="https://github.com/firojalam/crisis_datasets_benchmarks">https://github.com/firojalam/crisis_datasets_benchmarks</a>  
+<br>
+<br><b>Geoparsing:</b>
+<br>
+<a href="https://github.com/openeventdata/mordecai" target="_blank">Mordecai on Github</a>
+<br>Mordecai extracts placenames from English text, resolves them to the correct places and returns coordinates in a structured data Information
+<p>Mordecai takes in unstructured text and returns structured geographic information extracted
+from it.</p>
+<ul>
+<li>
+<p>It uses <a href="https://github.com/explosion/spaCy/">spaCy</a>'s named entity recognition to
+extract placenames from the text.</p>
+</li>
+<li>
+<p>It uses the <a href="http://www.geonames.org/" rel="nofollow">geonames</a>
+gazetteer in an <a href="https://www.elastic.co/products/elasticsearch" rel="nofollow">Elasticsearch</a> index
+(with some custom logic) to find the potential coordinates of
+extracted place names.</p>
+</li>
+<li>
+<p>It uses neural networks implemented in <a href="https://keras.io/" rel="nofollow">Keras</a> and trained on new annotated
+English-language data labeled with <a href="https://prodi.gy/" rel="nofollow">Prodigy</a> to infer the correct country and correct gazetteer entries for each
+placename.</p>
+</li>
+</ul>
+<br><b>Pretrained Text Vector:</b>
+<br>Tweet text was vectorized using the pretrained Twitter word vector from <a href="https://nlp.stanford.edu/projects/glove/">GloVe</a>
 <p><b>Citations:</b>
-ill put references her </p>
+<h4><strong>Crisis NLP</strong></h4>
+<ol>
+<li><a href="http://sites.google.com/site/firojalam/">Firoj Alam</a>, <a href="https://hsajjad.github.io/">Hassan Sajjad</a>, <a href="http://mimran.me/">Muhammad Imran</a> and <a href="https://sites.google.com/site/ferdaofli/">Ferda Ofli</a>, <a href="https://arxiv.org/abs/2004.06774" target="_blank"><strong>CrisisBench: Benchmarking Crisis-related Social Media Datasets for Humanitarian Information Processing,</strong></a> In ICWSM, 2021. [<a href="crisis_dataset_bib1.html">Bibtex</a>]
+        </li>
+<!-- <li><a href="http://sites.google.com/site/firojalam/">Firoj Alam</a>, <a href="https://hsajjad.github.io/">Hassan Sajjad</a>, <a href="http://mimran.me/">Muhammad Imran</a> and <a href="https://sites.google.com/site/ferdaofli/">Ferda Ofli</a>, <a href="https://arxiv.org/abs/2004.06774" target="_blank"><strong>Standardizing and Benchmarking Crisis-related Social Media Datasets for Humanitarian Information Processing,</strong></a> In arxiv, 2020. [<a href="crisis_dataset_bib.html">Bibtex</a>]</li>-->
+        <li>Firoj Alam, Ferda Ofli and Muhammad Imran. CrisisMMD: Multimodal Twitter Datasets from Natural Disasters. In Proceedings of the International AAAI Conference on Web and Social Media (ICWSM), 2018, Stanford, California, USA.</li>
+        <li>Muhammad Imran, Prasenjit Mitra, and Carlos Castillo: Twitter as a Lifeline: Human-annotated Twitter Corpora for NLP of Crisis-related Messages. In Proceedings of the 10th Language Resources and Evaluation Conference (LREC), pp. 1638-1643. May 2016, Portorož, Slovenia.</li>
+        <li>A. Olteanu, S. Vieweg, C. Castillo. 2015. What to Expect When the Unexpected Happens: Social Media Communications Across Crises. In Proceedings of the ACM 2015 Conference on Computer Supported Cooperative Work and Social Computing (CSCW '15). ACM, Vancouver, BC, Canada.</li>
+        <li>A. Olteanu, C. Castillo, F. Diaz, S. Vieweg. 2014. CrisisLex: A Lexicon for Collecting and Filtering Microblogged Communications in Crises. In Proceedings of the AAAI Conference on Weblogs and Social Media (ICWSM'14). AAAI Press, Ann Arbor, MI, USA.</li>
+        <li>Muhammad Imran, Shady Elbassuoni, Carlos Castillo, Fernando Diaz and Patrick Meier. Extracting Information Nuggets from Disaster-Related Messages in Social Media. In Proceedings of the 10th International Conference on Information Systems for Crisis Response and Management (ISCRAM), May 2013, Baden-Baden, Germany.</li>
+        <li>Muhammad Imran, Shady Elbassuoni, Carlos Castillo, Fernando Diaz and Patrick Meier. Practical Extraction of Disaster-Relevant Information from Social Media. In Social Web for Disaster Management (SWDM'13) - Co-located with WWW, May 2013, Rio de Janeiro, Brazil.</li>
+        <li>https://appen.com/datasets/combined- disaster-response-data/</li>
+        <li>https://data.world/crowdflower/disasters- on-social-media</li>
+</ol>
+<h4><strong>Mordecai</strong></h4>
+Halterman, (2017), Mordecai: Full Text Geoparsing and Event Geocoding, Journal of Open Source Software, 2(9), 91, doi:10.21105/joss.00091
+<h4><strong>GloVe</strong></h4>
+Jeffrey Pennington, Richard Socher, and Christopher D. Manning. 2014. 
+<a target="_blank" href="/pubs/glove.pdf">GloVe: Global Vectors for Word Representation</a>.
+[<a target="_blank" href="/pubs/glove.pdf">pdf</a>] [<a href="/pubs/glove.bib">bib</a>]
 
-<script>
-/*get the date for the last time twitter got scraped
-var dt = new Date();
-var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-document.getElementById("datetime").innerHTML = dt.getDate() + " "+ months[dt.getMonth()] + " " + dt.getFullYear()
-*/
-</script>
 
 
 </body>
