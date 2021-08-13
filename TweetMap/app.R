@@ -15,9 +15,6 @@ library(readr)
 library(tm)
 library(wordcloud)
 
-
-
-
 countries <- read_csv("Countries - Countries.csv")
 countrieslist <- countries[c('Country','alpha3')]
 firstOrderAdmin <- read_csv('Admin_ones.csv')
@@ -41,52 +38,56 @@ spToGeoJSON <- function(x){
   return(js)
 }
 
-# Define UI for application that draws a histogram
+# Define UI for application using shiny dashboard
 ui <- dashboardPage(
     dashboardHeader(title = "Natural Disaster Tweet Mapper",
                     titleWidth = 350),
     dashboardSidebar(
       width = 350,
         sidebarMenu(
+            
             menuItem("About", tabName = "About", icon = icon("book")),
             
             menuItem("Map Mentioned Locations", tabName = "map", icon = icon("globe")),
+            # This section will hold the data filters for the map and the table
             menuItem("Map Data Filters", icon = icon("filter"),
-                     
+                     ## Time filter
                      fluidRow(column(width = 6,
                               timeInput("startTime", "Start Time: ", value = NULL, 
                                seconds = FALSE, minute.steps = 15)),
                               column(width = 6,
                               timeInput("endTime", "End Time: ", value = NULL, seconds = FALSE,
                                         minute.steps = 15))),
+                     ## Time filter
                      dateRangeInput( "dates", "Date Range: ",
                                      start = "2021-07-31", end = "2021-08-01",
                                      min = min(tweets_geo$Datetime), max = Sys.Date(),
                                      format = "yyyy-mm-dd", startview = "month",
                                      weekstart = 0,language = "en",
                                      separator = " to ",width = NULL, autoclose = TRUE),
+                     
                      checkboxGroupInput("DisasterType", "Disaster Type to show:",
                                         c("Fire and Heat Related" = "fire",
                                           "Geological/Movement" ="geomovement" ,
                                           "Severe Weather" = "severeweather" ,
                                           "Tropical Weather" = "tropical",
                                           "Floods" = "flood")),
-                     fluidRow(column(width = 6, actionButton("HORY", "Filter Search")), 
-                              column(width = 6, actionButton("ALL", "No Event Filter"))),
+                
                      fluidRow(column(width = 6, actionButton("worldData", "Search World Wide")), 
-                              column(width = 6, actionButton("Reset", "Reset to Country"))),
+                              column(width = 6, actionButton("CountrySearch", "Search By Country:"))),
               
                            selectInput("CountrySelect", "Select Country: ",
                                        choices = countrieslist$Country),
-                           actionButton("CountrySearch", "1. Search By Country:"),
+                            actionButton("Drill", "Drill to 1st Level Admin"),
                            selectInput("FirstOrderAdminSelect",
                                        "Select First Order Admin: ",
                                        choices=character(0),
                                        selected=character(0)),
-                           actionButton("Drill", "2: Drill to 1st Level Admin")
+                           actionButton("Reset", "Reset to Country")
+                     
                            )
             ,
-            menuItem("Data Table", tabName = "dataTable", icon = icon("table"))
+            menuItem("Data Table and Export", tabName = "dataTable", icon = icon("table"))
         )
     ),
     dashboardBody(
@@ -138,314 +139,29 @@ ui <- dashboardPage(
 )#ui end
 
 server <- function(input, output, session) {
-  
-  observeEvent(input$ALL,{
-    observeEvent(input$worldData,{
-      
-      values <- reactiveValues(start = as.character(input$dates[1]),end= as.character(input$dates[2]))
-      hrs <- reactiveValues(start = as.character(strftime(input$startTime,"%T")),
-                             end = as.character(strftime(input$endTime,"%T")))
-      
-      
-      tweets_geo_sub <- subset(tweets_geo, tweets_geo$Datetime >= 
-                                    strptime(paste(values$start,hrs$start),format="%Y-%m-%d %H:%M:%S",tz="GMT") &
-                                    tweets_geo$Datetime < 
-                                    strptime(paste(values$end,hrs$end),format="%Y-%m-%d %H:%M:%S",tz="GMT"))
-      
-      output$MapTitle <-  renderText({ paste0("Tweet Map - World Wide: ",
-                                               month(as.Date(min(tweets_geo_sub$Datetime))),"/",
-                                               day(as.Date(min(tweets_geo_sub$Datetime))),"/",
-                                               year(as.Date(min(tweets_geo_sub$Datetime))) ," ",
-                                               str_sub(as.character(min(tweets_geo_sub$Datetime)),
-                                                       start= -8),"UTC", ' to ',
-                                               month(as.Date(max(tweets_geo_sub$Datetime))),"/",
-                                               day(as.Date(max(tweets_geo_sub$Datetime))),"/",
-                                               year(as.Date(max(tweets_geo_sub$Datetime)))," ",
-                                               str_sub(as.character(max(tweets_geo_sub$Datetime)),
-                                                       start= -8),"UTC"
-      )})
-      output$mappedDataTable<-renderDataTable(tweets_geo_sub)
-      output$download1 <- downloadHandler(
-        filename = function() {
-          paste0("Export.csv")
-        },
-        content = function(file) {
-          write.csv(tweets_geo_sub, file)
-        }
-      )
-      coords = data.frame(tweets_geo_sub$lon, tweets_geo_sub$lat)
-      tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)       
-      tweets_geoJSON<-fromJSON(spToGeoJSON(tweets_geo_spdf))
-      
-      session$sendCustomMessage("load_map_geo_data", tweets_geoJSON)
-      
-      d1<-(bbox(tweets_geo_spdf)[4]-bbox(tweets_geo_spdf)[2])*.2
-      d2<-(bbox(tweets_geo_spdf)[3]-bbox(tweets_geo_spdf)[1])*.2
-      vector1 <- c(bbox(tweets_geo_spdf)[2]-d1,bbox(tweets_geo_spdf)[4]+d1)
-      vector2 <- c(bbox(tweets_geo_spdf)[1]-d2,bbox(tweets_geo_spdf)[3]+d2)
 
-      box<-array(c(vector1,vector2),dim = c(2,2))
-
-      session$sendCustomMessage("bounds", box)
-      
-      output$wordc<- renderPlot ({
-        linesg<-tweets_geo_sub$ptext
-        docs <- Corpus(VectorSource(linesg))
-        
-        dtm2 <- TermDocumentMatrix(docs)
-        m2 <- as.matrix(dtm2)
-        v2 <- sort(rowSums(m2),decreasing=TRUE)
-        d2 <- data.frame(word = names(v2),freq=v2)
-        wordcloud(words = d2$word, freq = d2$freq, min.freq = input$minfreqw,
-                  max.words=input$maxnumw, random.order=FALSE, rot.per=0,
-                  colors=brewer.pal(8, "Dark2"))
-      })
-      
-    })
-    observeEvent(input$CountrySearch, {
-      selectedCountry<-isolate(input$CountrySelect)
-      selectedNation<<-toString(countrieslist %>% filter(Country==selectedCountry)%>%select(alpha3))
-      
-      values <- reactiveValues(start = as.character(input$dates[1]),end= as.character(input$dates[2]))
-      hrs <- reactiveValues(start = as.character(strftime(input$startTime,"%T")), 
-                            end = as.character(strftime(input$endTime,"%T")))
-      
-      
-      tweets_geo_sub <- subset(tweets_geo, tweets_geo$Datetime >= 
-                                    strptime(paste(values$start,hrs$start),format="%Y-%m-%d %H:%M:%S",tz="GMT") &
-                                    tweets_geo$Datetime < 
-                                    strptime(paste(values$end,hrs$end),format="%Y-%m-%d %H:%M:%S",tz="GMT") & 
-                                    tweets_geo$country_code3 ==selectedNation)
-      
-      output$MapTitle <-  renderText({ paste0("Tweet Map - ",selectedCountry,": ",
-                                              month(as.Date(min(tweets_geo_sub$Datetime))),"/",
-                                              day(as.Date(min(tweets_geo_sub$Datetime))),"/",
-                                              year(as.Date(min(tweets_geo_sub$Datetime))) ," ",
-                                              str_sub(as.character(min(tweets_geo_sub$Datetime)), 
-                                                      start= -8),"UTC", ' to ',
-                                              month(as.Date(max(tweets_geo_sub$Datetime))),"/",
-                                              day(as.Date(max(tweets_geo_sub$Datetime))),"/",
-                                              year(as.Date(max(tweets_geo_sub$Datetime)))," ",
-                                              str_sub(as.character(max(tweets_geo_sub$Datetime)), 
-                                                      start= -8),"UTC"
-                                              
-      )})
-      firstOrderAdminlist<<- firstOrderAdmin %>% 
-        filter(country_code3 == selectedNation) %>% select(admin1)
-      updateSelectInput(session,"FirstOrderAdminSelect",
-                        "Select First Order Admin: ",
-                        choices = firstOrderAdminlist)
-      
-      
-      
-      observeEvent(input$Drill,{
-        values <- reactiveValues(start = as.character(input$dates[1]),end= as.character(input$dates[2]))
-        hrs <- reactiveValues(start = as.character(strftime(input$startTime,"%T")), 
-                              end = as.character(strftime(input$endTime,"%T")))
-        
-        tweets_geo_sub <-subset(tweets_geo, tweets_geo$Datetime >=
-                                     strptime(paste(values$start,hrs$start),format="%Y-%m-%d %H:%M:%S",tz="GMT") &
-                                     tweets_geo$Datetime < 
-                                     strptime(paste(values$end,hrs$end),format="%Y-%m-%d %H:%M:%S",tz="GMT")&
-                                     tweets_geo$country_code3 ==selectedNation & 
-                                     tweets_geo$admin1 ==input$FirstOrderAdminSelect)
-        
-        
-        
-        output$MapTitle <-  renderText({ paste0("Tweet Map - ",input$FirstOrderAdminSelect, " ",selectedCountry,": ",
-                                                month(as.Date(min(tweets_geo_sub$Datetime))),"/",
-                                                day(as.Date(min(tweets_geo_sub$Datetime))),"/",
-                                                year(as.Date(min(tweets_geo_sub$Datetime))) ," ",
-                                                str_sub(as.character(min(tweets_geo_sub$Datetime)), 
-                                                        start= -8),"UTC", ' to ',
-                                                month(as.Date(max(tweets_geo_sub$Datetime))),"/",
-                                                day(as.Date(max(tweets_geo_sub$Datetime))),"/",
-                                                year(as.Date(max(tweets_geo_sub$Datetime)))," ",
-                                                str_sub(as.character(max(tweets_geo_sub$Datetime)), 
-                                                        start= -8),"UTC"
-        )})
-        output$mappedDataTable<-renderDataTable(tweets_geo_sub)
-       
-         output$download1 <- downloadHandler(
-          filename = function() {
-            paste0("Export.csv")
-          },
-          content = function(file) {
-            write.csv(tweets_geo_sub, file)
-          }
-        )
-         
-        coords = data.frame(tweets_geo_sub$lon, tweets_geo_sub$lat)
-        tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)
-        tweets_geoJSON<-fromJSON(spToGeoJSON(tweets_geo_spdf))
-        
-        session$sendCustomMessage("load_map_geo_data", tweets_geoJSON)
-        d1<-(bbox(tweets_geo_spdf)[4]-bbox(tweets_geo_spdf)[2])*.2
-        d2<-(bbox(tweets_geo_spdf)[3]-bbox(tweets_geo_spdf)[1])*.2
-        vector1 <- c(bbox(tweets_geo_spdf)[2]-d1,bbox(tweets_geo_spdf)[4]+d1)
-        vector2 <- c(bbox(tweets_geo_spdf)[1]-d2,bbox(tweets_geo_spdf)[3]+d2)
-        box<-array(c(vector1,vector2),dim = c(2,2))
-        
-        
-        
-        session$sendCustomMessage("bounds", box)
-        
-        output$wordc<- renderPlot ({
-          lines<-tweets_geo_sub$ptext
-          docs <- Corpus(VectorSource(lines))
-          
-          dtm2 <- TermDocumentMatrix(docs)
-          m2 <- as.matrix(dtm2)
-          v2 <- sort(rowSums(m2),decreasing=TRUE)
-          d2 <- data.frame(word = names(v2),freq=v2)
-          wordcloud(words = d2$word, freq = d2$freq, min.freq = input$minfreqw, 
-                    max.words=input$maxnumw, random.order=FALSE, rot.per=0, 
-                    colors=brewer.pal(8, "Dark2"))
-        })
-        
-        observeEvent(input$Reset,{
-          values <- reactiveValues(start = as.character(input$dates[1]),end= as.character(input$dates[2]))
-          hrs <- reactiveValues(start = as.character(strftime(input$startTime,"%T")), 
-                                end = as.character(strftime(input$endTime,"%T")))
-          
-          tweets_geo_sub <- subset(tweets_geo, tweets_geo$Datetime >= 
-                                        strptime(paste(values$start,hrs$start),format="%Y-%m-%d %H:%M:%S",tz="GMT") &
-                                        tweets_geo$Datetime < 
-                                        strptime(paste(values$end,hrs$end),format="%Y-%m-%d %H:%M:%S",tz="GMT") & 
-                                        tweets_geo$country_code3 ==selectedNation)
-          
-          output$MapTitle <-  renderText({ paste0("Tweet Map - ",selectedCountry,": ",
-                                                  month(as.Date(min(tweets_geo_sub$Datetime))),"/",
-                                                  day(as.Date(min(tweets_geo_sub$Datetime))),"/",
-                                                  year(as.Date(min(tweets_geo_sub$Datetime))) ," ",
-                                                  str_sub(as.character(min(tweets_geo_sub$Datetime)), 
-                                                          start= -8),"UTC", ' to ',
-                                                  # hour(min(tweets_geo_sub$Datetime)),":",
-                                                  # minute(min(tweets_geo_sub$Datetime)),":",
-                                                  # second(min(tweets_geo_sub$Datetime)),"UTC",' to ',
-                                                  month(as.Date(max(tweets_geo_sub$Datetime))),"/",
-                                                  day(as.Date(max(tweets_geo_sub$Datetime))),"/",
-                                                  year(as.Date(max(tweets_geo_sub$Datetime)))," ",
-                                                  str_sub(
-                                                    as.character(max(tweets_geo_sub$Datetime)), 
-                                                    start= -8),"UTC"
-                                                  # hour(max(tweets_geo_sub$Datetime)),":",
-                                                  # minute(max(tweets_geo_sub$Datetime)),":",
-                                                  # second(max(tweets_geo_sub$Datetime)),"UTC"
-                                                  
-                                                  
-          )})
-          
-          firstOrderAdminlist<<- firstOrderAdmin %>% 
-            filter(country_code3 == selectedNation) %>% select(admin1)
-          updateSelectInput(session,"FirstOrderAdminSelect",
-                            "Select First Order Admin: ",
-                            choices = firstOrderAdminlist)
-          coords = data.frame(tweets_geo_sub$lon, tweets_geo_sub$lat)
-          tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)
-          tweets_geoJSON<-fromJSON(spToGeoJSON(tweets_geo_spdf))
-          
-          output$mappedDataTable<-renderDataTable(tweets_geo_sub)
-          
-          output$download1 <- downloadHandler(
-            filename = function() {
-              paste0("Export.csv")
-            },
-            content = function(file) {
-              write.csv(tweets_geo_sub, file)
-            }
-          )
-          
-          session$sendCustomMessage("load_map_geo_data", tweets_geoJSON)
-          
-          d1<-(bbox(tweets_geo_spdf)[4]-bbox(tweets_geo_spdf)[2])*.2
-          d2<-(bbox(tweets_geo_spdf)[3]-bbox(tweets_geo_spdf)[1])*.2
-          vector1 <- c(bbox(tweets_geo_spdf)[2]-d1,bbox(tweets_geo_spdf)[4]+d1)
-          vector2 <- c(bbox(tweets_geo_spdf)[1]-d2,bbox(tweets_geo_spdf)[3]+d2)
-          
-          box<-array(c(vector1,vector2),dim = c(2,2))
-          
-          session$sendCustomMessage("bounds", box)
-          output$wordc<- renderPlot ({
-            lines<-tweets_geo_sub$ptext
-            docs <- Corpus(VectorSource(lines))
-            
-            dtm2 <- TermDocumentMatrix(docs)
-            m2 <- as.matrix(dtm2)
-            v2 <- sort(rowSums(m2),decreasing=TRUE)
-            d2 <- data.frame(word = names(v2),freq=v2)
-            wordcloud(words = d2$word, freq = d2$freq, min.freq = input$minfreqw, 
-                      max.words=input$maxnumw, random.order=FALSE, rot.per=0, 
-                      colors=brewer.pal(8, "Dark2"))
-          })
-          
-        })
-        
-        
-      })
-      
-      coords = data.frame(tweets_geo_sub$lon, tweets_geo_sub$lat)
-      tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)
-      tweets_geoJSON<-fromJSON(spToGeoJSON(tweets_geo_spdf))
-      
-      output$mappedDataTable<-renderDataTable(tweets_geo_sub)
-      
-      output$download1 <- downloadHandler(
-        filename = function() {
-          paste0("Export.csv")
-        },
-        content = function(file) {
-          write.csv(tweets_geo_sub, file)
-        }
-      )
-      
-      session$sendCustomMessage("load_map_geo_data", tweets_geoJSON)
-      
-      d1<-(bbox(tweets_geo_spdf)[4]-bbox(tweets_geo_spdf)[2])*.2
-      d2<-(bbox(tweets_geo_spdf)[3]-bbox(tweets_geo_spdf)[1])*.2
-      vector1 <- c(bbox(tweets_geo_spdf)[2]-d1,bbox(tweets_geo_spdf)[4]+d1)
-      vector2 <- c(bbox(tweets_geo_spdf)[1]-d2,bbox(tweets_geo_spdf)[3]+d2)
-      
-      box<-array(c(vector1,vector2),dim = c(2,2))
-      
-      session$sendCustomMessage("bounds", box)
-      output$wordc<- renderPlot ({
-        lines<-tweets_geo_sub$ptext
-        docs <- Corpus(VectorSource(lines))
-        
-        dtm2 <- TermDocumentMatrix(docs)
-        m2 <- as.matrix(dtm2)
-        v2 <- sort(rowSums(m2),decreasing=TRUE)
-        d2 <- data.frame(word = names(v2),freq=v2)
-        wordcloud(words = d2$word, freq = d2$freq, min.freq = input$minfreqw, 
-                  max.words=input$maxnumw, random.order=FALSE, rot.per=0, 
-                  colors=brewer.pal(8, "Dark2"))
-      })
-      
-    })
-    })
   
-  
-  observeEvent(input$HORY, { listl<-length(input$DisasterType)
-  
-  if (listl == 1){tweets_geo_sub <-subset(tweets_geo,
-                                            ((tweets_geo[input$DisasterType[1]] == TRUE))) }
-  else if(listl == 2){tweets_geo_sub<-subset(tweets_geo, ((tweets_geo[input$DisasterType[1]] == TRUE) |
-                                                                    (tweets_geo[input$DisasterType[2]] == TRUE)))}
-  else if(listl == 3){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
-                                                                   (tweets_geo[input$DisasterType[2]] == TRUE) |
-                                                                   (tweets_geo[input$DisasterType[3]] == TRUE))))}
-  else if(listl == 4){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
-                              (tweets_geo[input$DisasterType[2]] == TRUE) |
-                              (tweets_geo[input$DisasterType[3]] == TRUE) |
-                              (tweets_geo[input$DisasterType[4]] == TRUE))))}
-  else if(listl == 5){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
-                                                                 (tweets_geo[input$DisasterType[2]] == TRUE) |
-                                                                 (tweets_geo[input$DisasterType[3]] == TRUE) |
-                                                                 (tweets_geo[input$DisasterType[4]] == TRUE) |
-                                                                 (tweets_geo[input$DisasterType[5]] == TRUE))))}
   observeEvent(input$worldData,{
-    
+    print("World")
+    listl<-length(input$DisasterType)
+    if (listl == 0){tweets_geo_sub <-tweets_geo 
+    print('no filter')}
+    else if (listl == 1){tweets_geo_sub <-subset(tweets_geo,
+                                                 ((tweets_geo[input$DisasterType[1]] == TRUE))) }
+    else if(listl == 2){tweets_geo_sub<-subset(tweets_geo, ((tweets_geo[input$DisasterType[1]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[2]] == TRUE)))}
+    else if(listl == 3){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
+                                                              (tweets_geo[input$DisasterType[2]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[3]] == TRUE))))}
+    else if(listl == 4){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
+                                                              (tweets_geo[input$DisasterType[2]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[3]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[4]] == TRUE))))}
+    else if(listl == 5){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
+                                                              (tweets_geo[input$DisasterType[2]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[3]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[4]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[5]] == TRUE))))}
     
     values <- reactiveValues(start = as.character(input$dates[1]),end= as.character(input$dates[2]))
     hrs <- reactiveValues(start = as.character(strftime(input$startTime,"%T")),
@@ -481,16 +197,16 @@ server <- function(input, output, session) {
     )
     
     coords = data.frame(tweets_geo_sub$lon, tweets_geo_sub$lat)
-    tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)
+    try({tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)})
     tweets_geoJSON<-fromJSON(spToGeoJSON(tweets_geo_spdf))
     
     
     session$sendCustomMessage("load_map_geo_data", tweets_geoJSON)
     
-    d1<-(bbox(tweets_geo_spdf)[4]-bbox(tweets_geo_spdf)[2])*.2
-    d2<-(bbox(tweets_geo_spdf)[3]-bbox(tweets_geo_spdf)[1])*.2
-    vector1 <- c(bbox(tweets_geo_spdf)[2]-d1,bbox(tweets_geo_spdf)[4]+d1)
-    vector2 <- c(bbox(tweets_geo_spdf)[1]-d2,bbox(tweets_geo_spdf)[3]+d2)
+    # d1<-(bbox(tweets_geo_spdf)[4]-bbox(tweets_geo_spdf)[2])*.2
+    # d2<-(bbox(tweets_geo_spdf)[3]-bbox(tweets_geo_spdf)[1])*.2
+    vector1 <- c(bbox(tweets_geo_spdf)[2],bbox(tweets_geo_spdf)[4])
+    vector2 <- c(bbox(tweets_geo_spdf)[1],bbox(tweets_geo_spdf)[3])
     
     box<-array(c(vector1,vector2),dim = c(2,2))
     
@@ -512,6 +228,7 @@ server <- function(input, output, session) {
   })
 
   observeEvent(input$CountrySearch, {
+    
     selectedCountry<-isolate(input$CountrySelect)
     selectedNation<<-toString(countrieslist %>% filter(Country==selectedCountry)%>%select(alpha3))
     
@@ -519,6 +236,24 @@ server <- function(input, output, session) {
     hrs <- reactiveValues(start = as.character(strftime(input$startTime,"%T")), 
                           end = as.character(strftime(input$endTime,"%T")))
     
+    listl<-length(input$DisasterType)
+    if (listl == 0){tweets_geo_sub <-tweets_geo }
+    else if (listl == 1){tweets_geo_sub <-subset(tweets_geo,
+                                                 ((tweets_geo[input$DisasterType[1]] == TRUE))) }
+    else if(listl == 2){tweets_geo_sub<-subset(tweets_geo, ((tweets_geo[input$DisasterType[1]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[2]] == TRUE)))}
+    else if(listl == 3){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
+                                                              (tweets_geo[input$DisasterType[2]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[3]] == TRUE))))}
+    else if(listl == 4){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
+                                                              (tweets_geo[input$DisasterType[2]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[3]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[4]] == TRUE))))}
+    else if(listl == 5){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
+                                                              (tweets_geo[input$DisasterType[2]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[3]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[4]] == TRUE) |
+                                                              (tweets_geo[input$DisasterType[5]] == TRUE))))}
     
     tweets_geo_sub <- subset(tweets_geo_sub, tweets_geo_sub$Datetime >= 
                                   strptime(paste(values$start,hrs$start),format="%Y-%m-%d %H:%M:%S",tz="GMT") &
@@ -585,7 +320,7 @@ server <- function(input, output, session) {
       )
       
       coords = data.frame(tweets_geo_sub$lon, tweets_geo_sub$lat)
-      tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)
+      try({tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)})
       tweets_geoJSON<-fromJSON(spToGeoJSON(tweets_geo_spdf))
       
       session$sendCustomMessage("load_map_geo_data", tweets_geoJSON)
@@ -613,11 +348,26 @@ server <- function(input, output, session) {
       })
       
       observeEvent(input$Reset,{
-        values <- reactiveValues(start = as.character(input$dates[1]),end= as.character(input$dates[2]))
-        hrs <- reactiveValues(start = as.character(strftime(input$startTime,"%T")), 
-                              end = as.character(strftime(input$endTime,"%T")))
-
-        tweets_geo_spdf <- subset(tweets_geo_sub, tweets_geo_sub$Datetime >= 
+        print("do this reset")
+        if (listl == 0){tweets_geo_sub <-tweets_geo }
+        else if (listl == 1){tweets_geo_sub <-subset(tweets_geo,
+                                                     ((tweets_geo[input$DisasterType[1]] == TRUE))) }
+        else if(listl == 2){tweets_geo_sub<-subset(tweets_geo, ((tweets_geo[input$DisasterType[1]] == TRUE) |
+                                                                  (tweets_geo[input$DisasterType[2]] == TRUE)))}
+        else if(listl == 3){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
+                                                                  (tweets_geo[input$DisasterType[2]] == TRUE) |
+                                                                  (tweets_geo[input$DisasterType[3]] == TRUE))))}
+        else if(listl == 4){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
+                                                                  (tweets_geo[input$DisasterType[2]] == TRUE) |
+                                                                  (tweets_geo[input$DisasterType[3]] == TRUE) |
+                                                                  (tweets_geo[input$DisasterType[4]] == TRUE))))}
+        else if(listl == 5){tweets_geo_sub<-subset(tweets_geo,((tweets_geo[input$DisasterType[1]]  == TRUE |
+                                                                  (tweets_geo[input$DisasterType[2]] == TRUE) |
+                                                                  (tweets_geo[input$DisasterType[3]] == TRUE) |
+                                                                  (tweets_geo[input$DisasterType[4]] == TRUE) |
+                                                                  (tweets_geo[input$DisasterType[5]] == TRUE))))}
+        
+        tweets_geo_sub <- subset(tweets_geo_sub, tweets_geo_sub$Datetime >= 
                                       strptime(paste(values$start,hrs$start),format="%Y-%m-%d %H:%M:%S",tz="GMT") &
                                       tweets_geo_sub$Datetime < 
                                       strptime(paste(values$end,hrs$end),format="%Y-%m-%d %H:%M:%S",tz="GMT") & 
@@ -650,8 +400,9 @@ server <- function(input, output, session) {
         updateSelectInput(session,"FirstOrderAdminSelect",
                           "Select First Order Admin: ",
                           choices = firstOrderAdminlist)
+        
         coords = data.frame(tweets_geo_sub$lon, tweets_geo_sub$lat)
-        tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)
+        try({tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)})
         tweets_geoJSON<-fromJSON(spToGeoJSON(tweets_geo_spdf))
         
         output$mappedDataTable<-renderDataTable(tweets_geo_sub)
@@ -694,7 +445,7 @@ server <- function(input, output, session) {
     })
     
     coords = data.frame(tweets_geo_sub$lon, tweets_geo_sub$lat)
-    tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)
+    try({tweets_geo_spdf = SpatialPointsDataFrame(coords, tweets_geo_sub, proj4string = wgs84)})
     tweets_geoJSON<-fromJSON(spToGeoJSON(tweets_geo_spdf))
     output$mappedDataTable<-renderDataTable(tweets_geo_sub)
     
@@ -730,7 +481,7 @@ server <- function(input, output, session) {
     })
     
   })
-  })
+
 
 }
 

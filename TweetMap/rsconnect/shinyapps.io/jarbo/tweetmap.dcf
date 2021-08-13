@@ -5,9 +5,9 @@ account: jarbo
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 3908699
-bundleId: 4898268
+bundleId: 4920920
 url: https://jarbo.shinyapps.io/tweetmap/
-when: 1628332512.57131
+when: 1628884487.70981
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: alltweet_i.csv|app.html|app.log|app.tex|Continents.csv|tweets_fix.csv
+ignoredFiles: app2.R|app3.R|appA.R|appx.R|appy.R|Continents.csv|dubblecheck

@@ -57,8 +57,7 @@ from text_proccessing import make_embedding_matrix
 import modhelp
 from modhelp import train_val_split
 from modhelp import geo_df
-from modhelp import suggest_nn3
-initialize_nn(embedding_matrix)
+from modhelp import suggest_nn2
 
 # =============================================================================
 # import capstone_twitter_search
