@@ -12,7 +12,7 @@ or  mordecai is pointed to an elastic search instance
 This code demonstrates how to pull data from the twitter API, run a prediction 
 as to it's natural disater informativeness, and geoparse usign mordecai.
 
-At link 146 the user must pass dates to query Twitter against
+At line 146 the user must pass dates to query Twitter against
 
 """
 import os
@@ -97,7 +97,7 @@ print('Loading model,embedding and glove commenced at  {}'.format(start))
 # =============================================================================
 # Load trained RNN model
 # =============================================================================
-model = tf.keras.models.load_model(os.path.join(dsa,'model1'))
+model = tf.keras.models.load_model(os.path.join(parent_dir,'model1'))
 step1 = datetime.datetime.now()
 print("{}: model loaded in {} loading vecotor".format(step1, step1-start))
 path_to_glove_file = os.path.join(dsa,'WordVector','glove.twitter.27B.200d.txt')
