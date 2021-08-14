@@ -195,21 +195,17 @@ summary {
 <h1>Mapping Natural Disaster Locations from Social Media Content</h1>
 <div id="introduction" class="section level3">
 <h3>Introduction</h3>
-<p>       This project explored a workflow and method to condition, classify, geolocate and map unstructured data from social media in order to discover clusters of locations mentioned in natural disaster social media posts. This method collected posts from Twitter leveraging the scscrape python library, and processed and conditioned the text of the posts.</p>
-<p>       A binary classification recurrent neural network was trained in TensorFlow with Keras using human labeled tweets aggregated by the CrisisBenchmark dataset created by the Crisis NLP project at the Qatar Computing Research Institute. The text of the training data was vectorized using a pre-trained text embedding built from tweets using the Global Vectors for Word Representation (GloVE) methodology and available from the GloVe Project at Stanford University (Pennington, Socher, and Manning 2014). Hyperparameters for the model were tuned with the Hyperband algorithm, and the final model was evaluated using a 5-fold cross-validation. The model and text embedding built from the training data were used to classify tweets pulled from June and July 2021 for natural disaster informativeness.</p>
-<p>       The resulting informative tweets were then parsed for location and georeferenced using the Mordecai python library. Finally, the informative posts with locations mentioned in the text were displayed in an interactive R shiny web application for end users to map location explore by filtering data by geography, date and time, and research interest; discover trending topics on their selected data in a word cloud and export data for use by analysts in further research and visualization.</p>
+<p>       This project explored a workflow and method to condition, classify, geolocate and map unstructured data from social media in order to discover clusters of locations mentioned in natural disaster social media posts. This method collected posts from Twitter leveraging the <strong><a href="https://github.com/JustAnotherArchivist/snscrape">Snscrape</a></strong> python library, and processed and conditioned the text of the posts.</p>
+<p>       A binary classification recurrent neural network was trained in TensorFlow with Keras using human labeled tweets aggregated by the <strong><a href="https://crisisnlp.qcri.org/crisis_datasets_benchmarks">CrisisBenchmark dataset</a></strong> created by the <strong><a href="https://crisisnlp.qcri.org">Crisis NLP project at the Qatar Computing Research Institute</a></strong>.</p>
+<p>The text of the training data was vectorized using a pre-trained text embedding built from tweets using the Global Vectors for Word Representation (GloVE) methodology and available from the <strong><a href="https://nlp.stanford.edu/projects/glove/">GloVe Project at Stanford University</a></strong> (Pennington, Socher, and Manning 2014). Hyperparameters for the model were tuned with the Hyperband algorithm, and the final model was evaluated using a 5-fold cross-validation. The model and text embedding built from the training data were used to classify tweets pulled from June and July 2021 for natural disaster informativeness.</p>
+<p>       The resulting informative tweets were then parsed for location and georeferenced using the <strong><a href="https://github.com/openeventdata/mordecai">Mordecai python library</a></strong>. Finally, the informative posts with locations mentioned in the text were displayed in an interactive R shiny web application for end users to map location explore by filtering data by geography, date and time, and research interest; discover trending topics on their selected data in a word cloud and export data for use by analysts in further research and visualization.</p>
 </div>
-<div id="contents" class="section level2">
-<h2>Contents</h2>
 <div id="jupiter-notebooks" class="section level3">
 <h3>Jupiter Notebooks</h3>
 <p>Exploration of Variables <a href="https://github.com/arboj/arbogast-capstone/blob/c9bfe55972b65e40304e620bea2b03d45ec51169/Code/TextDataEDA.ipynb">TextDataEDA.ipynb</a></p>
 <p>Text Preprocessing <a href="https://github.com/arboj/arbogast-capstone/blob/f81faeac7c3be1436587886de6bee341629b2453/Code/TextConditioningandMachineLearning.ipynb">TextConditioningandMachineLearning.ipynb</a></p>
-</div>
-<div id="visualizations" class="section level3">
-<h3>Visualizations</h3>
-<p>Please see the periodically updated <a href="https://jarbo.shinyapps.io/tweetmap/">Shiny app</a></p>
-</div>
+<p>Mordecai<br />
+Mordecai was used to geoparse locations from the content of tweets. Docker <a href="https://www.docker.com" class="uri">https://www.docker.com</a> Docker was used it initiate a elastic search over a geonames index for the mordecai geo parser Elastic <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html" class="uri">https://www.elastic.co/guide/en/elasticsearch/reference/current/docker.html</a> Elastic was used to enable Mordecai to search the geonames index in a docker container</p>
 </div>
 </div>
 
