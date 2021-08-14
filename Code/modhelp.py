@@ -94,12 +94,18 @@ def test_listerine(df):
     return test_samples, test_labels
 
 
-def geo_df(df,geo):
-    
-# =============================================================================
-#     geo = Geoparser()
-# =============================================================================
-    df['geos'] = geo.batch_geoparse(df['Text'])
+def geo_df(df,geo, field):
+    '''
+    This function calls the batch geo parsing method from Mordecai.
+    Parameters: 
+        df: a data frame containign data to be geo parse
+        geo: the mordecai insstance
+        field: The field with the data to be used for geoparsing
+    Returns:
+        Dataframe of geoparsed records
+    '''
+
+    df['geos'] = geo.batch_geoparse(df[field])
     df_geo = df[df["geos"].str.len() != 0]
     df_geo = df_geo.explode('geos')
     df_geo = pd.concat([df_geo.drop(['geos'], axis=1), df_geo['geos'].apply(pd.Series)], axis=1)
@@ -108,28 +114,6 @@ def geo_df(df,geo):
     df_geo.lat = df_geo.lat.astype(float)
     df_geo.lon =df_geo.lon.astype(float)
     return df_geo
-
-#     df_js = pd.DataFrame()
-#     for row in range(len(result_inf)):
-#         df_temp = pd.json_normalize(result_inf['geos'], record_path =['spans'], 
-#         meta=['word',"country_predicted", "country_conf",['geo',"admin1"],
-#               ['geo',"lat"],['geo',"lon"],['geo',"country_code3"],['geo',"geonameid"],
-#               ['geo',"place_name"],['geo',"feature_class"],['geo',"feature_code"]],
-#         errors='ignore'
-#     )
-#         df_temp['TweetId']=''
-#         for i in range(len(df_temp)):
-#             df_temp['TweetId'][i]=tweets_df['TweetId'][row]
-#         df_js=df_js.append(df_temp,ignore_index=True)
-
-#     df_js = df_js.rename(columns = {'TweetId':'TweetId', 'start':'start', 'end':'end', 
-#                                     'word':'word','country_predicted':'country_predicted', 
-#                                     'country_conf': 'country_conf','geo.admin1':'admin1', 
-#                                     'geo.lat':'lat', 'geo.lon':'lon', 
-#                                     'geo.country_code3':'country_code3','geo.geonameid':'geonameid', 
-#                                     'geo.place_name':'place_name', 
-#                                     'geo.feature_class':'feature_class','geo.feature_code':'feature_code'})
-#     return df_js
 
 
 
@@ -157,109 +141,6 @@ def suggest_nn2(df, model, vectorizer):
     
     return predictions
 
-def suggest_nn3(df, model, vectorizer):
-    """
-    This function generates (binary) targets from a dataframe with column "text" using trained Keras model
-    
-    Parameters:
-        df: pandas dataframe with column "text"
-        model: Keras model (trained)
-    
-    Output:
-        predictions: list of suggested targets corresponding to string entries from the column "text"
-    """
-    
-    string_input = keras.Input(shape=(1,), dtype="string")
-    x = vectorizer(string_input)
-    preds = model(x)
-    end_to_end_model = keras.Model(string_input, preds)
 
-    probabilities = end_to_end_model.predict(df["text"])
-    
-    predictions = [1 if i > 0.5 else 0 for i in probabilities]
-    
-    return predictions
-
-def initialize_nn(embedding_matrix):
-    """
-    This function initializes Keras model for binary text classification
-    
-    Parameters:
-        embedding matrix with the dimensions (num_tokens, embedding_dim),
-         where num_tokens is the vocabulary size of the input data,
-          and emdebbing_dim is the number of components in the GloVe vectors
-    
-    Returns:
-        model: Keras model    
-    """
-    
-    num_tokens = embedding_matrix.shape[0]
-    embedding_dim = embedding_matrix.shape[1]
-    
-    embedding_layer = Embedding(
-    num_tokens,
-    embedding_dim,
-    embeddings_initializer=keras.initializers.Constant(embedding_matrix),
-    trainable=False,                # we are not going to train the embedding vectors
-    )
-    
-#   Here we define the architecture of the Keras model. 
-    int_sequences_input = keras.Input(shape=(None,), dtype="int64")
-    x = embedding_layer(int_sequences_input) 
-    x = layers.Dropout(.7)(x)
-    x = layers.Bidirectional(layers.LSTM(128,                                        
-                                          dropout=.4,
-                                          return_sequences=True))(x)
-# =============================================================================
-#     x = layers.Bidirectional(layers.LSTM(32,
-#                                           dropout=.5))(x)
-# =============================================================================
-    x = layers.Dense(128)(x)
-    x = layers.Dropout(.5)(x)
-    preds = layers.Dense(1, activation='sigmoid')(x)
-    model = keras.Model(int_sequences_input, preds)
-    
-    return model
-
-def train_nn(model, train_samples, val_samples, train_labels, val_labels, vectorizer, stop = True):
-    """
-    This function fits the training data using validation data to calculate metrics.
-    
-    Parameters:
-        model: preinitialized Keras model
-        train_samples: list of strings in the training dataset
-        val_samples: list of strings in the validation dataset
-        train_labels: list of labels (0 or 1) in the training dataset
-        val_labels: list of labels (0 or 1) in the validation dataset
-        vectorizer: TextVectorization layer
-        stop (Boolean): flag for Early Stopping (aborting training when a monitored metric has stopped improving)
-    
-    Returns:
-        model: trained Keras model
-        history: callback that can be used to track the learning process
-    """
-    
-    print('')
-    print("Training the model...")
-    
-    model.compile(loss="binary_crossentropy", 
-              optimizer="adam", 
-              metrics=["binary_accuracy"])
-    
-    x_train = vectorizer(np.array([[s] for s in train_samples])).numpy()
-    x_val = vectorizer(np.array([[s] for s in val_samples])).numpy()
-    
-    y_train = np.asarray(train_labels).astype('float32').reshape((-1,1))
-    y_val = np.asarray(val_labels).astype('float32').reshape((-1,1))
-
-    
-    
-    if stop:
-        early_stopping = EarlyStopping(monitor='val_loss', patience=1)
-        history = model.fit(x_train, y_train, batch_size=32, epochs=50, validation_data=(x_val, y_val), callbacks=[early_stopping], verbose=1)
-    else:
-        history = model.fit(x_train, y_train, batch_size=32, epochs=10, validation_data=(x_val, y_val), verbose=1)
-        
-    return model, history
 
     

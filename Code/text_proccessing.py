@@ -111,14 +111,18 @@ def make_embedding_matrix(train_samples, val_samples, embeddings_index):
 
     return embedding_matrix, vectorizer
 
-def processme(twts):
-    procstart =  datetime.datetime.now()
-    print("{}: processing ".format(procstart))
+def twtprocessed (twts):
+    '''
+    Parapmeter: 
+        twts: scraped twitter data
+    '''
+    
+  
     twts['ptext'] = twts['Text'].apply(lambda x: clean_text(x))
     twts['ptext'] = twts['ptext'].apply(lambda x: word_tokenize(x))
     twts['ptext'] = twts['ptext'].apply(lambda x : remove_stopwords(x))
     twts['ptext'] = twts['ptext'].apply(lambda x : lemmatize_text(x))
     twts['ptext'] = twts['ptext'].apply(lambda x : concatenate_text(x))
-    procend=  datetime.datetime.now() 
-    print("{}: processed in {}".format(procend, procend - procstart))
+    
+  
     return twts
