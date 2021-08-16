@@ -87,7 +87,7 @@ train_data['text']= train_data['text'].astype(str)
 # =============================================================================
 train_samples, val_samples, train_labels, val_labels = train_val_split(train_data, 0.25)
 readend = datetime.datetime.now()
-print("{}: Training data loaded in {} moving to loading model and embedding. Total time elapsed: {}".format(starti,readend-starti,readend-overallstart))
+print("{}: Training data loaded in {} moving to loading model and embedding. Total time elapsed: {}".format(readstart,readend-readstart,readend-overallstart))
 # =============================================================================
 # Load trained RNN model
 # =============================================================================
@@ -159,7 +159,7 @@ print("{}: Tweets from {} to {} predicted in {}. Moving to geo parsing. Total ti
 # =============================================================================
 # This initiaties the mordecai geoparsing module, uses tweets file from predicition
 # =============================================================================
-print(geostart)
+
 df_js = geo_df(result_inf,geo,'Text') 
 name =os.path.join(geotweets,"geod_{}_{}.csv".format(since_date.replace('-',''),
                                                                 until_date.replace('-','')))
